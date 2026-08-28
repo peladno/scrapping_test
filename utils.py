@@ -241,7 +241,7 @@ def save_excel_with_fallback(
     all_results: List[Dict[str, str]],
     store_dfs: Dict[str, pd.DataFrame],
     output_excel: str,
-    fallback_name: str = "scraped_prices_updated.xlsx",
+    fallback_name: Optional[str] = None,
 ) -> None:
     """Export all results DataFrame and individual store tabs into Excel.
 
@@ -252,8 +252,14 @@ def save_excel_with_fallback(
         all_results: List of all extracted item dictionaries.
         store_dfs: Dictionary of store names to DataFrames.
         output_excel: Primary target Excel file path.
-        fallback_name: Fallback Excel file path if locked.
+        fallback_name: Optional fallback Excel file path if locked.
     """
+    if fallback_name is None:
+        if output_excel.endswith(".xlsx"):
+            fallback_name = output_excel[:-5] + "_updated.xlsx"
+        else:
+            fallback_name = output_excel + "_updated.xlsx"
+
     try:
         _export_to_excel(all_results, store_dfs, output_excel)
         print(f"Excel generated successfully at '{output_excel}'!", flush=True)

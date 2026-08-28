@@ -189,7 +189,11 @@ def compare_and_highlight_excel(
                 df.to_excel(writer, sheet_name=str(s_name), index=False)
 
     except PermissionError:
-        fallback = "rakuten_price_comparison_updated.xlsx"
+        fallback = (
+            output_excel[:-5] + "_updated.xlsx"
+            if output_excel.endswith(".xlsx")
+            else output_excel + "_updated.xlsx"
+        )
         with pd.ExcelWriter(fallback, engine="openpyxl") as writer:
             for s_name in sheet_names:
                 df = pd.read_excel(excel_file, sheet_name=s_name)
