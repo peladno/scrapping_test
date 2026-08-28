@@ -4,12 +4,11 @@ Compares scraped product prices from Rakuten store Excel files against
 the official catalog prices in 'list-products.xlsx' by product model code.
 
 Color Highlights:
-- RED: Code exists in official catalog, but scraped price does NOT match.
-- YELLOW: Product code not found in catalog or unassigned.
-- GREEN / NO FILL: Scraped price matches official catalog price.
+- RED (#FFC7CE): Code exists in official catalog, but price differs.
+- YELLOW (#FFF2CC): Product code not found in catalog or unassigned.
+- GREEN (#C6EFCE): Price matches official catalog price.
 """
 
-import re
 import sys
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -22,42 +21,11 @@ from config import (
     OUTPUT_COMPARISON_EXCEL,
     OUTPUT_SCRAPED_EXCEL,
 )
+from utils import format_currency_yen, parse_numeric_price
 
 # Configure UTF-8 encoding for Windows console output
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
-
-
-def parse_numeric_price(price_val: Any) -> Optional[float]:
-    """Extract numeric float value from a price string or number.
-
-    Args:
-        price_val: Raw price string or number.
-
-    Returns:
-        Float price value or None if invalid.
-    """
-    if price_val is None or pd.isna(price_val):
-        return None
-    cleaned = re.sub(r"[^\d.]", "", str(price_val))
-    try:
-        return float(cleaned) if cleaned else None
-    except ValueError:
-        return None
-
-
-def format_currency_yen(amount: Optional[float]) -> str:
-    """Format float amount into Yen currency string.
-
-    Args:
-        amount: Numeric price amount.
-
-    Returns:
-        Formatted Yen string (e.g., '¥12,100') or 'N/A'.
-    """
-    if amount is None or pd.isna(amount):
-        return "N/A"
-    return f"¥{int(round(amount)):,}"
 
 
 def load_official_catalog_prices(
@@ -221,8 +189,8 @@ def compare_and_highlight_excel(
                 df.to_excel(writer, sheet_name=str(s_name), index=False)
 
     except PermissionError:
-        output_excel = "rakuten_price_comparison_updated.xlsx"
-        with pd.ExcelWriter(output_excel, engine="openpyxl") as writer:
+        fallback = "rakuten_price_comparison_updated.xlsx"
+        with pd.ExcelWriter(fallback, engine="openpyxl") as writer:
             for s_name in sheet_names:
                 df = pd.read_excel(excel_file, sheet_name=s_name)
 
@@ -247,6 +215,7 @@ def compare_and_highlight_excel(
                 df["Comparison_Status"] = statuses
 
                 df.to_excel(writer, sheet_name=str(s_name), index=False)
+        output_excel = fallback
 
     print("Data processing complete. Applying color highlights...", flush=True)
 
