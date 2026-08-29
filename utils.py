@@ -99,7 +99,7 @@ def extract_product_code(
                 return code
 
     prefixes = (
-        r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX)"
+        r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX|IST|GCG|IB|GSTC|SST|GB|GF)"
         r"-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
     )
     match = re.search(prefixes, title, re.IGNORECASE)
@@ -213,23 +213,26 @@ def sanitize_sheet_name(name: str) -> str:
 def fetch_url_with_retries(
     url: str,
     headers: Dict[str, str],
+    session: Optional[requests.Session] = None,
     timeout: int = HTTP_TIMEOUT,
     retries: int = HTTP_RETRIES,
 ) -> Optional[requests.Response]:
-    """Fetch URL over HTTP with retry mechanism and exponential backoff.
+    """Fetch URL over HTTP with retry mechanism and session pooling.
 
     Args:
         url: Target HTTP URL.
         headers: Request HTTP headers.
+        session: Optional persistent requests.Session instance.
         timeout: Request timeout in seconds.
         retries: Number of retry attempts.
 
     Returns:
         Response object if status code is 200, otherwise None.
     """
+    req_obj = session if session is not None else requests
     for attempt in range(retries):
         try:
-            response = requests.get(url, headers=headers, timeout=timeout)
+            response = req_obj.get(url, headers=headers, timeout=timeout)
             if response.status_code == 200:
                 return response
         except requests.RequestException:

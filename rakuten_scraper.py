@@ -1,6 +1,6 @@
 """Rakuten Store Scraper.
 
-Reads store search URLs from Excel ('rakuten_stores.xlsx' - sheet '楽天市場'),
+Reads store search URLs from Excel ('rakuten_stores.xlsx' - sheet '楽天'),
 scrapes product info (Name, Code, Price, Points, URL) for each store
 with pagination and filtering by 'GLOBAL' keyword or model codes,
 and exports a multi-sheet Excel file ('rakuten_prices_by_store.xlsx')
@@ -43,7 +43,7 @@ def load_rakuten_stores_from_excel(
     excel_path: str = RAKUTEN_MASTER_EXCEL,
     sheet_name: str = RAKUTEN_SHEET_NAME,
 ) -> List[Tuple[str, str, str]]:
-    """Load store list and target search URLs from master Excel file.
+    """Load store list and target search URLs from rakuten_stores.xlsx.
 
     Args:
         excel_path: Path to Rakuten master Excel file.
@@ -91,6 +91,39 @@ def load_rakuten_stores_from_excel(
     return stores
 
 
+def build_rakuten_page_url(search_url: str, page: int) -> str:
+    """Build the paginated URL for Rakuten store searches.
+
+    Handles inshop-mall path URLs and search/mall query URLs.
+
+    Args:
+        search_url: Base search URL for the Rakuten store.
+        page: Page number (1-indexed).
+
+    Returns:
+        Paginated URL string.
+    """
+    if page == 1:
+        return search_url
+
+    m_inshop = re.search(
+        r"/search/inshop-mall/([^/]+)/-/sid\.(\d+)", search_url
+    )
+    if m_inshop:
+        keyword = m_inshop.group(1)
+        sid = m_inshop.group(2)
+        return (
+            f"https://search.rakuten.co.jp/search/mall/{keyword}/"
+            f"?p={page}&sid={sid}"
+        )
+
+    if "p=" in search_url:
+        return re.sub(r"([?&])p=\d+", rf"\g<1>p={page}", search_url)
+
+    sep = "&" if "?" in search_url else "?"
+    return f"{search_url}{sep}p={page}"
+
+
 def scrape_rakuten_store_products(
     store_name: str,
     company_name: str,
@@ -104,7 +137,7 @@ def scrape_rakuten_store_products(
     Args:
         store_name: Name of the store.
         company_name: Name of the company.
-        search_url: Base search URL for the Rakuten store.
+        search_url: Base search URL for the store.
         official_codes: Official product codes catalog.
         headers: HTTP headers for web requests.
         max_pages_per_store: Max pagination depth per store.
@@ -121,14 +154,15 @@ def scrape_rakuten_store_products(
     points_class_pattern = re.compile(r"points--")
 
     while page <= max_pages_per_store:
-        if page == 1:
-            url = search_url
-        elif "?" in search_url:
-            url = f"{search_url}&p={page}"
-        else:
-            url = f"{search_url}?p={page}"
+        url = build_rakuten_page_url(search_url, page)
 
         try:
+            print(
+                f"  [Page {page}] Fetching... (please wait ~10s)",
+                flush=True,
+            )
+            start_time = time.time()
+
             response = None
             for attempt in range(HTTP_RETRIES):
                 try:
@@ -138,20 +172,28 @@ def scrape_rakuten_store_products(
                     if response.status_code == 200:
                         break
                 except requests.RequestException:
-                    time.sleep(2 * (attempt + 1))
+                    time.sleep(1.5 * (attempt + 1))
+
+            elapsed = round(time.time() - start_time, 1)
 
             if response is None or response.status_code != 200:
                 status_msg = (
                     response.status_code if response else "No response"
                 )
                 print(
-                    f"  [Page {page}] Status {status_msg}. Stop.",
+                    f"  [Page {page}] Status {status_msg} ({elapsed}s). Stop.",
                     flush=True,
                 )
                 break
 
+            print(
+                f"  [Page {page}] Response OK ({elapsed}s). Parsing...",
+                flush=True,
+            )
+
             soup = BeautifulSoup(response.text, "html.parser")
             title_elements = soup.find_all(class_=title_class_pattern)
+            print(title_elements)
 
             if not title_elements:
                 print(
@@ -163,7 +205,12 @@ def scrape_rakuten_store_products(
             new_items = 0
             for t_el in title_elements:
                 product_url = t_el.get("href", "")
-                if product_url and product_url in seen_urls:
+
+                # Skip elements without href (visual image duplicates)
+                if not product_url:
+                    continue
+
+                if product_url in seen_urls:
                     continue
 
                 title_text = t_el.get_text(strip=True)
@@ -176,17 +223,27 @@ def scrape_rakuten_store_products(
                 if not has_global and not product_code:
                     continue
 
-                if product_url:
-                    seen_urls.add(product_url)
+                seen_urls.add(product_url)
 
-                parent = (
-                    t_el.find_parent("li")
-                    or t_el.find_parent("div", class_=re.compile(r"grid"))
-                    or t_el.parent.parent
+                # Locate parent item card containing price and points
+                card = (
+                    t_el.find_parent(
+                        class_=re.compile(r"searchresultitem|dui-card")
+                    )
+                    or t_el.find_parent("li")
                 )
+                if not card:
+                    curr = t_el.parent
+                    for _ in range(6):
+                        if not curr:
+                            break
+                        if curr.find(class_=price_class_pattern):
+                            card = curr
+                            break
+                        curr = curr.parent
 
                 price_el = (
-                    parent.find(class_=price_class_pattern) if parent else None
+                    card.find(class_=price_class_pattern) if card else None
                 )
                 raw_price = (
                     price_el.get_text(strip=True)
@@ -196,8 +253,8 @@ def scrape_rakuten_store_products(
                 price_text = clean_price_text(raw_price)
 
                 points_el = (
-                    parent.find(class_=points_class_pattern)
-                    if parent
+                    card.find(class_=points_class_pattern)
+                    if card
                     else None
                 )
                 raw_points = (
@@ -222,9 +279,15 @@ def scrape_rakuten_store_products(
                 )
                 new_items += 1
 
+            print(
+                f"  [Page {page}] Found {new_items} new items "
+                f"(total: {len(store_results)}).",
+                flush=True,
+            )
+
             if new_items == 0:
                 print(
-                    f"  [Page {page}] End of catalog reached. Stopping.",
+                    f"  [Page {page}] End of catalog. Stopping.",
                     flush=True,
                 )
                 break
@@ -311,7 +374,6 @@ def scrape_all_rakuten_stores(
         all_results=all_results,
         store_dfs=store_dfs,
         output_excel=output_excel,
-        fallback_name="rakuten_prices_by_store_updated.xlsx",
     )
 
 

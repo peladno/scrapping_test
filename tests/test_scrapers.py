@@ -3,7 +3,27 @@
 import re
 from bs4 import BeautifulSoup
 
+from rakuten_scraper import build_rakuten_page_url
 from yahoo_scraper import build_yahoo_page_url
+
+
+def test_build_rakuten_page_url_inshop() -> None:
+    """Test pagination URL construction for Rakuten inshop-mall."""
+    url = (
+        "https://search.rakuten.co.jp/search/inshop-mall/"
+        "GLOBAL/-/sid.211966-st.A"
+    )
+    assert build_rakuten_page_url(url, 1) == url
+    url_p2 = build_rakuten_page_url(url, 2)
+    assert "p=2" in url_p2 and "sid=211966" in url_p2
+
+
+def test_build_rakuten_page_url_query() -> None:
+    """Test pagination URL construction for Rakuten query format."""
+    url = "https://search.rakuten.co.jp/search/mall/GLOBAL/?sid=243032"
+    assert build_rakuten_page_url(url, 1) == url
+    url_p2 = build_rakuten_page_url(url, 2)
+    assert "p=2" in url_p2 and "sid=243032" in url_p2
 
 
 def test_build_yahoo_page_url_general_search() -> None:

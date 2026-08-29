@@ -172,6 +172,13 @@ def scrape_yahoo_store_products(
         url = build_yahoo_page_url(search_url, page)
 
         try:
+            print(
+                f"  [Page {page}] Fetching... ",
+                end="",
+                flush=True,
+            )
+            start_time = time.time()
+
             response = None
             for attempt in range(HTTP_RETRIES):
                 try:
@@ -183,15 +190,22 @@ def scrape_yahoo_store_products(
                 except requests.RequestException:
                     time.sleep(2 * (attempt + 1))
 
+            elapsed = round(time.time() - start_time, 1)
+
             if response is None or response.status_code != 200:
                 status_msg = (
                     response.status_code if response else "No response"
                 )
                 print(
-                    f"  [Page {page}] Status {status_msg}. Stop.",
+                    f"Status {status_msg} ({elapsed}s). Stop.",
                     flush=True,
                 )
                 break
+
+            print(
+                f"OK ({elapsed}s). Parsing...",
+                flush=True,
+            )
 
             soup = BeautifulSoup(response.text, "html.parser")
             detail_links = soup.find_all("a", class_=detail_link_pattern)
@@ -207,6 +221,9 @@ def scrape_yahoo_store_products(
             for link_el in detail_links:
                 raw_href = link_el.get("href", "")
                 product_url = clean_product_url(raw_href)
+
+                if not product_url:
+                    continue
 
                 card = (
                     link_el.find_parent(
@@ -286,9 +303,15 @@ def scrape_yahoo_store_products(
                 )
                 new_items += 1
 
+            print(
+                f"  [Page {page}] Found {new_items} new items "
+                f"(total: {len(store_results)}).",
+                flush=True,
+            )
+
             if new_items == 0:
                 print(
-                    f"  [Page {page}] End of catalog reached. Stopping.",
+                    f"  [Page {page}] End of catalog. Stopping.",
                     flush=True,
                 )
                 break
