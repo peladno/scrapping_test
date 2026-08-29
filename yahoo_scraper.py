@@ -23,8 +23,14 @@ from config import (
     HTTP_TIMEOUT,
     MAX_PAGES_PER_STORE,
     OUTPUT_YAHOO_SCRAPED_EXCEL,
+    YAHOO_BRAND_CLASS,
+    YAHOO_CARD_CLASS,
+    YAHOO_DETAIL_LINK_CLASS,
     YAHOO_MASTER_EXCEL,
+    YAHOO_POINTS_CLASS,
+    YAHOO_PRICE_CLASS,
     YAHOO_SHEET_NAME,
+    YAHOO_TITLE_CLASS,
 )
 from utils import (
     clean_points_text,
@@ -154,19 +160,12 @@ def scrape_yahoo_store_products(
     seen_keys: Set[str] = set()
     page = 1
 
-    detail_link_pattern = re.compile(
-        r"SearchResult_SearchResultItem__detailLink|detailLink"
-    )
-    title_class_pattern = re.compile(
-        r"ItemTitle_SearchResultItemTitle"
-    )
-    brand_class_pattern = re.compile(
-        r"ItemBrand_SearchResultItemBrand"
-    )
-    price_class_pattern = re.compile(r"ItemPrice_ItemPrice|ItemPrice")
-    points_class_pattern = re.compile(
-        r"ItemPointModal|PointText|PointRate"
-    )
+    detail_link_pattern = re.compile(YAHOO_DETAIL_LINK_CLASS)
+    title_class_pattern = re.compile(YAHOO_TITLE_CLASS)
+    brand_class_pattern = re.compile(YAHOO_BRAND_CLASS)
+    price_class_pattern = re.compile(YAHOO_PRICE_CLASS)
+    points_class_pattern = re.compile(YAHOO_POINTS_CLASS)
+    card_class_pattern = re.compile(YAHOO_CARD_CLASS)
 
     while page <= max_pages_per_store:
         url = build_yahoo_page_url(search_url, page)
@@ -226,9 +225,7 @@ def scrape_yahoo_store_products(
                     continue
 
                 card = (
-                    link_el.find_parent(
-                        class_=re.compile(r"SearchResult_SearchResultItem")
-                    )
+                    link_el.find_parent(class_=card_class_pattern)
                     or link_el.find_parent("li")
                     or link_el.parent
                 )

@@ -99,8 +99,8 @@ def extract_product_code(
                 return code
 
     prefixes = (
-        r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX|IST|GCG|IB|GSTC|SST|GB|GF)"
-        r"-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
+        r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX|IST|GCG|IB|"
+        r"GSTC|SST|GB|GF)-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
     )
     match = re.search(prefixes, title, re.IGNORECASE)
     if match:

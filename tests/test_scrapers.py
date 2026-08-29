@@ -1,8 +1,14 @@
-"""Unit tests for scraper modules (yahoo_scraper and raskuten_scraper)."""
+"""Unit tests for scraper modules (yahoo_scraper and rakuten_scraper)."""
 
 import re
 from bs4 import BeautifulSoup
 
+from config import (
+    YAHOO_DETAIL_LINK_CLASS,
+    YAHOO_POINTS_CLASS,
+    YAHOO_PRICE_CLASS,
+    YAHOO_TITLE_CLASS,
+)
 from rakuten_scraper import build_rakuten_page_url
 from yahoo_scraper import build_yahoo_page_url
 
@@ -60,12 +66,10 @@ def test_yahoo_card_extraction(yahoo_item_card_html: str) -> None:
     """Test parsing a sample Yahoo product card HTML snippet."""
     soup = BeautifulSoup(yahoo_item_card_html, "html.parser")
 
-    detail_link_pattern = re.compile(
-        r"SearchResult_SearchResultItem__detailLink|detailLink"
-    )
-    title_pattern = re.compile(r"ItemTitle_SearchResultItemTitle")
-    price_pattern = re.compile(r"ItemPrice_ItemPrice")
-    points_pattern = re.compile(r"ItemPointModal|PointText")
+    detail_link_pattern = re.compile(YAHOO_DETAIL_LINK_CLASS)
+    title_pattern = re.compile(YAHOO_TITLE_CLASS)
+    price_pattern = re.compile(YAHOO_PRICE_CLASS)
+    points_pattern = re.compile(YAHOO_POINTS_CLASS)
 
     link_el = soup.find("a", class_=detail_link_pattern)
     assert link_el is not None

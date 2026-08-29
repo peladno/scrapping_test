@@ -1,7 +1,8 @@
 """Configuration settings for Rakuten and Yahoo Scrapers and Price Comparators.
 
 Centralizes all input/output file paths, sheet names, HTTP parameters,
-and scraping settings as clean Python constants for quick access.
+scraping settings, and CSS class patterns as clean Python constants
+for easy maintenance and rapid adaptation to website DOM changes.
 """
 
 from pathlib import Path
@@ -42,3 +43,23 @@ MAX_PAGES_PER_STORE: int = 50
 HTTP_TIMEOUT: int = 15
 HTTP_RETRIES: int = 3
 COURTESY_PAUSE_SECONDS: float = 1.5
+
+# ----------------------------------------------------------------------
+# Rakuten Scraping CSS Selectors / Class Patterns
+# ----------------------------------------------------------------------
+RAKUTEN_TITLE_CLASS: str = r"title-link"
+RAKUTEN_PRICE_CLASS: str = r"price--"
+RAKUTEN_POINTS_CLASS: str = r"points--"
+RAKUTEN_CARD_CLASS: str = r"searchresultitem|dui-card"
+
+# ----------------------------------------------------------------------
+# Yahoo Shopping Scraping CSS Selectors / Class Patterns
+# ----------------------------------------------------------------------
+YAHOO_DETAIL_LINK_CLASS: str = (
+    r"SearchResult_SearchResultItem__detailLink|detailLink"
+)
+YAHOO_CARD_CLASS: str = r"SearchResult_SearchResultItem"
+YAHOO_TITLE_CLASS: str = r"ItemTitle_SearchResultItemTitle"
+YAHOO_BRAND_CLASS: str = r"ItemBrand_SearchResultItemBrand"
+YAHOO_PRICE_CLASS: str = r"ItemPrice_ItemPrice|ItemPrice"
+YAHOO_POINTS_CLASS: str = r"ItemPointModal|PointText|PointRate"

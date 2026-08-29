@@ -23,8 +23,12 @@ from config import (
     HTTP_TIMEOUT,
     MAX_PAGES_PER_STORE,
     OUTPUT_SCRAPED_EXCEL,
+    RAKUTEN_CARD_CLASS,
     RAKUTEN_MASTER_EXCEL,
+    RAKUTEN_POINTS_CLASS,
+    RAKUTEN_PRICE_CLASS,
     RAKUTEN_SHEET_NAME,
+    RAKUTEN_TITLE_CLASS,
 )
 from utils import (
     clean_points_text,
@@ -149,9 +153,10 @@ def scrape_rakuten_store_products(
     seen_urls: Set[str] = set()
     page = 1
 
-    title_class_pattern = re.compile(r"title-link")
-    price_class_pattern = re.compile(r"price--")
-    points_class_pattern = re.compile(r"points--")
+    title_class_pattern = re.compile(RAKUTEN_TITLE_CLASS)
+    price_class_pattern = re.compile(RAKUTEN_PRICE_CLASS)
+    points_class_pattern = re.compile(RAKUTEN_POINTS_CLASS)
+    card_class_pattern = re.compile(RAKUTEN_CARD_CLASS)
 
     while page <= max_pages_per_store:
         url = build_rakuten_page_url(search_url, page)
@@ -193,7 +198,6 @@ def scrape_rakuten_store_products(
 
             soup = BeautifulSoup(response.text, "html.parser")
             title_elements = soup.find_all(class_=title_class_pattern)
-            print(title_elements)
 
             if not title_elements:
                 print(
@@ -227,9 +231,7 @@ def scrape_rakuten_store_products(
 
                 # Locate parent item card containing price and points
                 card = (
-                    t_el.find_parent(
-                        class_=re.compile(r"searchresultitem|dui-card")
-                    )
+                    t_el.find_parent(class_=card_class_pattern)
                     or t_el.find_parent("li")
                 )
                 if not card:
