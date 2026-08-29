@@ -1,7 +1,7 @@
 """Rakuten Price Comparison and Excel Highlighter.
 
 Compares scraped product prices from Rakuten store Excel files against
-the official catalog prices in 'list-products.xlsx' by product model code.
+the official catalog prices configured in environment by model code.
 
 Color Highlights:
 - RED (#FFC7CE): Code exists in official catalog, but price differs.

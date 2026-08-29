@@ -1,8 +1,7 @@
 """Yahoo Price Comparison and Excel Highlighter.
 
 Compares scraped product prices from Yahoo store Excel files
-('yahoo_prices_by_store.xlsx') against official catalog prices
-in 'list-products.xlsx' by product model code.
+against official catalog prices configured in environment by model code.
 
 Color Highlights:
 - RED (#FFC7CE): Code exists in official catalog, but price differs.

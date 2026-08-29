@@ -1,4 +1,29 @@
-__pycache__
-.mypy_cache
-.pytest_cache
-.venv
+# Python Bytecode & Cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# Virtual Environments
+.venv/
+env/
+venv/
+ENV/
+
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Excel Files & Data Dumps
+*.xlsx
+*.xls
+*.csv
+data/inputs/*.xlsx
+data/outputs/*.xlsx
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp

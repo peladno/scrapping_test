@@ -1,10 +1,10 @@
 """Yahoo Store Scraper.
 
-Reads store search URLs from Excel ('yahoo_stores.xlsx' - sheet 'Yahoo'),
+Reads store search URLs from master Excel configured in environment,
 scrapes product info (Name, Code, Price, Points, URL) for each store
 with pagination and filtering by 'GLOBAL' keyword or model codes,
-and exports a multi-sheet Excel file ('yahoo_prices_by_store.xlsx')
-with a consolidated sheet and individual store tabs.
+and exports a multi-sheet Excel file with a consolidated sheet and
+individual store tabs.
 """
 
 import re
@@ -50,10 +50,10 @@ def load_yahoo_stores_from_excel(
     excel_path: str = YAHOO_MASTER_EXCEL,
     sheet_name: str = YAHOO_SHEET_NAME,
 ) -> List[Tuple[str, str, str]]:
-    """Load store list and target search URLs from yahoo_stores.xlsx.
+    """Load store list and target search URLs from master Excel file.
 
     Args:
-        excel_path: Path to Yahoo master Excel file.
+        excel_path: Path to master Excel file.
         sheet_name: Sheet name containing store rows.
 
     Returns:
