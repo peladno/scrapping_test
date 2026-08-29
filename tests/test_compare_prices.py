@@ -2,6 +2,7 @@
 
 from typing import Dict, Optional
 from compare_prices import compare_single_item
+from config import TARGET_KEYWORD
 
 
 def test_compare_single_item_match(
@@ -33,7 +34,7 @@ def test_compare_single_item_code_not_found(
 ) -> None:
     """Test code not found status for invalid or unassigned codes."""
     status, p_incl, p_excl = compare_single_item(
-        "GLOBAL", "12,100円", sample_catalog_prices
+        TARGET_KEYWORD, "12,100円", sample_catalog_prices
     )
     assert status == "CODE_NOT_FOUND"
     assert p_incl is None

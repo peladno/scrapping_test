@@ -20,6 +20,7 @@ from config import (
     CATALOG_LIST_EXCEL,
     OUTPUT_COMPARISON_EXCEL,
     OUTPUT_SCRAPED_EXCEL,
+    TARGET_KEYWORD,
 )
 from utils import format_currency_yen, parse_numeric_price
 
@@ -95,7 +96,7 @@ def compare_single_item(
 
     invalid_codes: Set[str] = {
         "",
-        "GLOBAL",
+        TARGET_KEYWORD.upper(),
         "NAN",
         "NONE",
         "SIN CÓDIGO ESPECÍFICO",

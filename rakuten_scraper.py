@@ -29,6 +29,7 @@ from config import (
     RAKUTEN_PRICE_CLASS,
     RAKUTEN_SHEET_NAME,
     RAKUTEN_TITLE_CLASS,
+    TARGET_KEYWORD,
 )
 from utils import (
     clean_points_text,
@@ -219,12 +220,12 @@ def scrape_rakuten_store_products(
 
                 title_text = t_el.get_text(strip=True)
 
-                has_global = "GLOBAL" in title_text.upper()
+                has_target = TARGET_KEYWORD.upper() in title_text.upper()
                 product_code = extract_product_code(
                     title_text, official_codes
                 )
 
-                if not has_global and not product_code:
+                if not has_target and not product_code:
                     continue
 
                 seen_urls.add(product_url)
@@ -272,7 +273,7 @@ def scrape_rakuten_store_products(
                         "Company": company_name,
                         "Product": title_text,
                         "Product_Code": (
-                            product_code if product_code else "GLOBAL"
+                            product_code if product_code else TARGET_KEYWORD
                         ),
                         "Price": price_text,
                         "Points": points_text,

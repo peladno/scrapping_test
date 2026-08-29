@@ -23,6 +23,7 @@ from config import (
     HTTP_TIMEOUT,
     MAX_PAGES_PER_STORE,
     OUTPUT_YAHOO_SCRAPED_EXCEL,
+    TARGET_KEYWORD,
     YAHOO_BRAND_CLASS,
     YAHOO_CARD_CLASS,
     YAHOO_DETAIL_LINK_CLASS,
@@ -245,9 +246,9 @@ def scrape_yahoo_store_products(
                     if brand_el:
                         brand_text = brand_el.get_text(strip=True)
 
-                has_global = (
-                    "GLOBAL" in title_text.upper()
-                    or "GLOBAL" in brand_text.upper()
+                has_target = (
+                    TARGET_KEYWORD.upper() in title_text.upper()
+                    or TARGET_KEYWORD.upper() in brand_text.upper()
                 )
                 product_code = extract_product_code(
                     title_text, official_codes
@@ -257,7 +258,7 @@ def scrape_yahoo_store_products(
                         brand_text, official_codes
                     )
 
-                if not has_global and not product_code:
+                if not has_target and not product_code:
                     continue
 
                 dedup_key = f"{title_text}_{product_url}"
@@ -291,7 +292,7 @@ def scrape_yahoo_store_products(
                         "Company": company_name,
                         "Product": title_text,
                         "Product_Code": (
-                            product_code if product_code else "GLOBAL"
+                            product_code if product_code else TARGET_KEYWORD
                         ),
                         "Price": price_text,
                         "Points": points_text,
