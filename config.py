@@ -82,7 +82,7 @@ COURTESY_PAUSE_SECONDS: float = float(
 # ----------------------------------------------------------------------
 # Target Brand / Product Keyword Filtering
 # ----------------------------------------------------------------------
-TARGET_KEYWORD: str | None = os.getenv("TARGET_KEYWORD")
+TARGET_KEYWORD: str = str(os.getenv("TARGET_KEYWORD") or "GLOBAL")
 
 # ----------------------------------------------------------------------
 # Rakuten Scraping CSS Selectors / Class Patterns

@@ -8,7 +8,8 @@ sanitizing sheet names, and saving Excel workbooks with fallback handling.
 import re
 import sys
 import time
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
+import unicodedata
 import urllib.parse
 
 import pandas as pd
@@ -75,10 +76,186 @@ def load_official_product_codes(
     return sorted(official_codes, key=len, reverse=True)
 
 
+# ----------------------------------------------------------------------
+# Japanese Knife Ontology & Model Mapping Table
+# ----------------------------------------------------------------------
+JAPANESE_KNIFE_ONTOLOGY: Dict[str, str] = {
+    "三徳": "SANTOKU",
+    "万能": "SANTOKU",
+    "牛刀": "GYUTO",
+    "シェフナイフ": "GYUTO",
+    "ペティ": "PETTY",
+    "ペティー": "PETTY",
+    "小型": "PETTY",
+    "パン切り": "BREAD",
+    "ブレッド": "BREAD",
+    "スライサー": "SLICER",
+    "菜切り": "NAKIRI",
+    "菜切": "NAKIRI",
+    "出刃": "DEBA",
+    "小出刃": "KODEBA",
+    "刺身": "SASHIMI",
+    "柳刃": "YANAGIBA",
+    "筋引": "SUJIHIKI",
+    "皮むき": "PEELING",
+    "シャープナー": "SHARPENER",
+    "研ぎ器": "SHARPENER",
+}
+
+# (Series, Category, Length_cm) -> Catalog Model Code for Single Knives
+MODEL_ATTRIBUTE_MAP: Dict[Tuple[str, str, Optional[int]], str] = {
+    # Standard Series
+    ("STANDARD", "SANTOKU", 18): "G-46",
+    ("STANDARD", "SANTOKU", 16): "G-57",
+    ("STANDARD", "SANTOKU", 14): "GS-201",
+    ("STANDARD", "GYUTO", 20): "G-2",
+    ("STANDARD", "GYUTO", 18): "G-55",
+    ("STANDARD", "PETTY", 13): "GS-3",
+    ("STANDARD", "PETTY", 9): "GS-38",
+    ("STANDARD", "PETTY", 10): "GS-58",
+    ("STANDARD", "BREAD", 22): "G-9",
+    ("STANDARD", "SLICER", 21): "G-3",
+    ("STANDARD", "NAKIRI", 18): "G-5",
+    ("STANDARD", "NAKIRI", 14): "GS-5",
+    ("STANDARD", "SHARPENER", None): "G-91/SB",
+    # IST Series
+    ("IST", "SANTOKU", 19): "IST-01",
+    ("IST", "PETTY", 15): "IST-02",
+    ("IST", "KODEBA", 12): "IST-05",
+    ("IST", "BREAD", 20): "IST-04",
+    ("IST", "SHARPENER", None): "SHARPENER",
+}
+
+# (Series, Category, Length_cm, Set_Count) -> Catalog Model Code for Knife Sets
+MODEL_SET_ATTRIBUTE_MAP: Dict[Tuple[str, str, Optional[int], int], str] = {
+    # Standard Series - Gyuto Sets
+    ("STANDARD", "GYUTO", 16, 2): "GST-A58",
+    ("STANDARD", "GYUTO", 20, 2): "GST-A2",
+    ("STANDARD", "GYUTO", None, 2): "GST-A2",
+    ("STANDARD", "GYUTO", 18, 3): "GST-B4",
+    ("STANDARD", "GYUTO", 20, 3): "GST-B2",
+    ("STANDARD", "GYUTO", None, 3): "GST-B2",
+    ("STANDARD", "GYUTO", 20, 4): "GST-C2",
+    ("STANDARD", "GYUTO", None, 4): "GST-C2",
+    # Standard Series - Santoku Sets
+    ("STANDARD", "SANTOKU", 18, 2): "GST-A46",
+    ("STANDARD", "SANTOKU", 16, 2): "GST-A57",
+    ("STANDARD", "SANTOKU", 14, 2): "GST-AS201/SP",
+    ("STANDARD", "SANTOKU", None, 2): "GST-A46",
+    ("STANDARD", "SANTOKU", 18, 3): "GST-B46",
+    ("STANDARD", "SANTOKU", 16, 3): "GST-B57",
+    ("STANDARD", "SANTOKU", None, 3): "GST-B46",
+    ("STANDARD", "SANTOKU", 18, 4): "GST-C46",
+    ("STANDARD", "SANTOKU", None, 4): "GST-C46",
+    # Standard Series - Petty Sets
+    ("STANDARD", "PETTY", 13, 2): "GST-AS3",
+    ("STANDARD", "PETTY", None, 2): "GST-AS3",
+    # IST Series Sets
+    ("IST", "SANTOKU", 19, 2): "IST-A01",
+    ("IST", "SANTOKU", None, 2): "IST-A01",
+    ("IST", "SANTOKU", None, 3): "IST-B05",
+}
+
+
+def normalize_japanese_text(text: str) -> str:
+    """Normalize Unicode characters, full-width alphanumeric, and spaces."""
+    if not text:
+        return ""
+    normalized = unicodedata.normalize("NFKC", text)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def extract_knife_attributes(
+    title: str,
+) -> Tuple[str, Optional[str], Optional[int], Optional[int]]:
+    """Extract knife series, category, length, and set count from title.
+
+    Args:
+        title: Product title text in Japanese or mixed.
+
+    Returns:
+        Tuple of (series, category, length_cm, set_count).
+    """
+    norm_title = normalize_japanese_text(title)
+
+    # 1. Series detection
+    series = "STANDARD"
+    if re.search(r"\bIST\b|イスト|GLOBAL-IST|GLOBAL IST", norm_title, re.I):
+        series = "IST"
+    elif re.search(r"\bPRO\b|プロ|GLOBAL-PRO", norm_title, re.I):
+        series = "PRO"
+
+    # 2. Knife Category detection
+    category: Optional[str] = None
+    for keyword, cat in JAPANESE_KNIFE_ONTOLOGY.items():
+        if keyword in norm_title:
+            category = cat
+            break
+
+    # 3. Blade Length detection in cm (e.g. 18cm, 180mm, 18 センチ)
+    length_cm: Optional[int] = None
+    cm_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:cm|センチ)", norm_title, re.I)
+    if cm_match:
+        length_cm = int(round(float(cm_match.group(1))))
+    else:
+        mm_match = re.search(r"(\d+)\s*mm", norm_title, re.I)
+        if mm_match:
+            length_cm = int(round(float(mm_match.group(1)) / 10))
+
+    # 4. Set count detection (e.g. 2点セット, 3点セット, 4点, セット)
+    set_count: Optional[int] = None
+    set_match = re.search(
+        r"(\d+)\s*(?:点セット|点組|点set|set|Pセット|pセット|点)",
+        norm_title,
+        re.I,
+    )
+    if set_match:
+        set_count = int(set_match.group(1))
+    elif "セット" in norm_title or "ギフトセット" in norm_title:
+        set_count = 2
+
+    return series, category, length_cm, set_count
+
+
+def match_japanese_knife_model(title: str) -> Optional[str]:
+    """Map Japanese title to catalog model code based on knife attributes.
+
+    Args:
+        title: Product title text in Japanese.
+
+    Returns:
+        Official catalog model code if mapped, otherwise None.
+    """
+    series, category, length_cm, set_count = extract_knife_attributes(title)
+    if not category:
+        return None
+
+    # Step A: Check Knife Set mapping if a set is detected
+    if set_count is not None:
+        set_key = (series, category, length_cm, set_count)
+        if set_key in MODEL_SET_ATTRIBUTE_MAP:
+            return MODEL_SET_ATTRIBUTE_MAP[set_key]
+
+        set_key_no_length = (series, category, None, set_count)
+        if set_key_no_length in MODEL_SET_ATTRIBUTE_MAP:
+            return MODEL_SET_ATTRIBUTE_MAP[set_key_no_length]
+
+    # Step B: Check Individual Knife mapping
+    key = (series, category, length_cm)
+    if key in MODEL_ATTRIBUTE_MAP:
+        return MODEL_ATTRIBUTE_MAP[key]
+
+    key_no_length = (series, category, None)
+    if key_no_length in MODEL_ATTRIBUTE_MAP:
+        return MODEL_ATTRIBUTE_MAP[key_no_length]
+
+    return None
+
+
 def extract_product_code(
     title: str, official_codes: Optional[List[str]] = None
 ) -> Optional[str]:
-    """Extract product code from title using catalog list or regex prefixes.
+    """Extract product code from title using catalog, regex, or fuzzy matching.
 
     Args:
         title: Product title text.
@@ -90,6 +267,7 @@ def extract_product_code(
     if not title:
         return None
 
+    # Step 1: Explicit match in official codes list
     if official_codes:
         for code in official_codes:
             pattern = r"\b" + re.escape(code) + r"\b"
@@ -98,6 +276,7 @@ def extract_product_code(
             if code in title:
                 return code
 
+    # Step 2: Regex prefix pattern matching
     prefixes = (
         r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX|IST|GCG|IB|"
         r"GSTC|SST|GB|GF)-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
@@ -105,6 +284,11 @@ def extract_product_code(
     match = re.search(prefixes, title, re.IGNORECASE)
     if match:
         return match.group(0).upper()
+
+    # Step 3: Japanese knife ontology fuzzy attribute matching
+    fuzzy_matched_code = match_japanese_knife_model(title)
+    if fuzzy_matched_code:
+        return fuzzy_matched_code
 
     return None
 

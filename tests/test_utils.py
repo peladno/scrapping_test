@@ -73,10 +73,33 @@ def test_extract_product_code(sample_catalog_codes: List[str]) -> None:
     assert extract_product_code("", sample_catalog_codes) is None
 
 
+def test_japanese_fuzzy_knife_matching() -> None:
+    """Test Japanese title matching when explicit model code is omitted."""
+    # Standard Santoku 18cm -> G-46
+    title_santoku = "GLOBAL グローバル 包丁 三徳 18cm 万能包丁"
+    assert extract_product_code(title_santoku, None) == "G-46"
+
+    # Full-width zenkaku characters '１６ｃｍ' -> G-57
+    title_zenkaku = "GLOBAL 包丁 三徳 １６ｃｍ ステンレス"
+    assert extract_product_code(title_zenkaku, None) == "G-57"
+
+    # Gyuto 20cm -> G-2
+    title_gyuto = "グローバル 包丁 牛刀 20cm"
+    assert extract_product_code(title_gyuto, None) == "G-2"
+
+    # Petty 13cm -> GS-3
+    title_petty = "GLOBAL ペティナイフ 13cm 小型包丁"
+    assert extract_product_code(title_petty, None) == "GS-3"
+
+    # IST series Santoku 19cm -> IST-01
+    title_ist = "GLOBAL-IST 万能包丁 19cm イスト"
+    assert extract_product_code(title_ist, None) == "IST-01"
+
+
 def test_sanitize_sheet_name() -> None:
     """Test Excel sheet name sanitization and max 31 char limit."""
     long_name = "Tienda: Con [Caracteres/Especiales] * Y Muchos Caracteres"
     sanitized = sanitize_sheet_name(long_name)
     assert len(sanitized) <= 31
     assert "/" not in sanitized
-    assert "[" not in sanitized
+    assert "[" not in sanitized and "]" not in sanitized
