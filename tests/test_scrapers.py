@@ -9,7 +9,10 @@ from config import (
     YAHOO_PRICE_CLASS,
     YAHOO_TITLE_CLASS,
 )
-from rakuten_scraper import build_rakuten_page_url
+from rakuten_scraper import (
+    build_rakuten_page_url,
+    parse_rakuten_spec_table,
+)
 from yahoo_scraper import build_yahoo_page_url
 
 
@@ -85,3 +88,53 @@ def test_yahoo_card_extraction(yahoo_item_card_html: str) -> None:
     points_el = soup.find(class_=points_pattern)
     assert points_el is not None
     assert "5%" in points_el.get_text(strip=True)
+
+
+def test_parse_rakuten_spec_table() -> None:
+    """Test extracting model code from Rakuten SpecTableArea HTML."""
+    sample_spec_html = """
+    <html>
+      <body>
+        <table>
+          <tr>
+            <td irc="SpecTableArea">
+              <table>
+                <tbody>
+                  <tr>
+                    <td><div>ブランド名</div></td>
+                    <td><div>GLOBAL / グローバル</div></td>
+                  </tr>
+                  <tr>
+                    <td><div>メーカー型番</div></td>
+                    <td><div>G-46</div></td>
+                  </tr>
+                  <tr>
+                    <td><div>代表カラー</div></td>
+                    <td><div>シルバー</div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+    </html>
+    """
+    code = parse_rakuten_spec_table(sample_spec_html, ["G-46", "G-2"])
+    assert code == "G-46"
+
+    # Test with surrounding Japanese text in model code div
+    sample_spec_html_complex = """
+    <td irc="SpecTableArea">
+      <table>
+        <tr>
+          <td><div>メーカー型番</div></td>
+          <td><div>型番：GST-A58（牛刀2点セット）</div></td>
+        </tr>
+      </table>
+    </td>
+    """
+    code_complex = parse_rakuten_spec_table(
+        sample_spec_html_complex, ["GST-A58"]
+    )
+    assert code_complex == "GST-A58"

@@ -91,6 +91,8 @@ RAKUTEN_TITLE_CLASS: str = r"title-link"
 RAKUTEN_PRICE_CLASS: str = r"price--"
 RAKUTEN_POINTS_CLASS: str = r"points--"
 RAKUTEN_CARD_CLASS: str = r"searchresultitem|dui-card"
+RAKUTEN_SPEC_TABLE_ATTR: str = r"SpecTableArea"
+RAKUTEN_MAKER_MODEL_KEYWORD: str = r"メーカー型番"
 
 # ----------------------------------------------------------------------
 # Yahoo Shopping Scraping CSS Selectors / Class Patterns

@@ -10,9 +10,9 @@ individual store tabs.
 import re
 import sys
 import time
-from typing import Dict, List, Set, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import pandas as pd
 import requests
 
@@ -24,10 +24,12 @@ from config import (
     MAX_PAGES_PER_STORE,
     OUTPUT_SCRAPED_EXCEL,
     RAKUTEN_CARD_CLASS,
+    RAKUTEN_MAKER_MODEL_KEYWORD,
     RAKUTEN_MASTER_EXCEL,
     RAKUTEN_POINTS_CLASS,
     RAKUTEN_PRICE_CLASS,
     RAKUTEN_SHEET_NAME,
+    RAKUTEN_SPEC_TABLE_ATTR,
     RAKUTEN_TITLE_CLASS,
     TARGET_KEYWORD,
 )
@@ -127,6 +129,95 @@ def build_rakuten_page_url(search_url: str, page: int) -> str:
 
     sep = "&" if "?" in search_url else "?"
     return f"{search_url}{sep}p={page}"
+
+
+def parse_rakuten_spec_table(
+    html_content: str, official_codes: Optional[List[str]] = None
+) -> Optional[str]:
+    """Extract manufacturer model code (メーカー型番) from Rakuten SpecTableArea.
+
+    Navigates the product detail page DOM to locate <td irc="SpecTableArea">
+    and reads the table rows (<tr>) containing two cells (<td>) each with
+    a <div>, matching 'メーカー型番' to extract the corresponding model code.
+
+    Args:
+        html_content: Raw HTML text of the Rakuten product detail page.
+        official_codes: Optional list of official catalog codes.
+
+    Returns:
+        Extracted product model code if found, otherwise None.
+    """
+    if not html_content:
+        return None
+
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Locate SpecTableArea container (e.g. <td irc="SpecTableArea">)
+    spec_container = (
+        soup.find(attrs={"irc": re.compile(RAKUTEN_SPEC_TABLE_ATTR, re.I)})
+        or soup.find(id=re.compile(RAKUTEN_SPEC_TABLE_ATTR, re.I))
+        or soup.find(class_=re.compile(RAKUTEN_SPEC_TABLE_ATTR, re.I))
+    )
+    search_root = (
+        spec_container if isinstance(spec_container, Tag) else soup
+    )
+
+    rows = search_root.find_all("tr")
+    for row in rows:
+        cells = row.find_all(["td", "th"])
+        if len(cells) < 2:
+            continue
+
+        cell_texts: List[str] = []
+        for cell in cells:
+            div = cell.find("div")
+            text = (
+                div.get_text(strip=True) if div else cell.get_text(strip=True)
+            )
+            cell_texts.append(text)
+
+        # Check if any cell in this row is the 'メーカー型番' label
+        if any(RAKUTEN_MAKER_MODEL_KEYWORD in t for t in cell_texts):
+            for text_val in cell_texts:
+                if RAKUTEN_MAKER_MODEL_KEYWORD not in text_val:
+                    raw_code = text_val.strip()
+                    if raw_code:
+                        extracted = extract_product_code(
+                            raw_code, official_codes
+                        )
+                        return extracted if extracted else raw_code
+
+    return None
+
+
+def fetch_rakuten_maker_model_code(
+    product_url: str,
+    headers: Dict[str, str],
+    official_codes: Optional[List[str]] = None,
+) -> Optional[str]:
+    """Fetch Rakuten product detail page and extract メーカー型番 from SpecTableArea.
+
+    Args:
+        product_url: Direct URL to the Rakuten product detail page.
+        headers: HTTP headers for web requests.
+        official_codes: Optional list of official catalog codes.
+
+    Returns:
+        Extracted model code if found, otherwise None.
+    """
+    if not product_url or not product_url.startswith("http"):
+        return None
+
+    try:
+        response = requests.get(
+            product_url, headers=headers, timeout=HTTP_TIMEOUT
+        )
+        if response.status_code == 200:
+            return parse_rakuten_spec_table(response.text, official_codes)
+    except Exception as err:
+        print(f"    [Detail Page Error] {product_url}: {err}", flush=True)
+
+    return None
 
 
 def scrape_rakuten_store_products(
@@ -229,6 +320,14 @@ def scrape_rakuten_store_products(
                     continue
 
                 seen_urls.add(product_url)
+
+                # If no code in title, query product detail page SpecTableArea
+                if not product_code and product_url:
+                    detail_code = fetch_rakuten_maker_model_code(
+                        product_url, headers, official_codes
+                    )
+                    if detail_code:
+                        product_code = detail_code
 
                 # Locate parent item card containing price and points
                 card = (
