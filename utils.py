@@ -279,7 +279,7 @@ def extract_product_code(
     # Step 2: Regex prefix pattern matching
     prefixes = (
         r"(?:GKW|GST|GSS|GCB|GTF|GTJ|SST|GS|GT|G|GBX|IST|GCG|IB|"
-        r"GSTC|SST|GB|GF)-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
+        r"GSTC|SST|GB|GF|IBX)-[A-Za-z0-9]+(?:/[A-Za-z0-9]+)?"
     )
     match = re.search(prefixes, title, re.IGNORECASE)
     if match:
@@ -361,6 +361,40 @@ def clean_points_text(raw_points: str) -> str:
 
     points_clean = raw_points.strip()
     return points_clean if points_clean else "N/A"
+
+
+def evaluate_point_status(points_raw: Any) -> str:
+    """Evaluate if points meet the allowed threshold (1倍 or 1倍+1倍UP).
+
+    Points cannot exceed 1x (except standard 1倍 or 1倍+1倍UP). Multipliers
+    greater than 1 (e.g. 2倍, 5倍, 10倍, 1倍+9倍UP, 5%) are marked 'X'.
+
+    Args:
+        points_raw: Raw points text from scraped Excel.
+
+    Returns:
+        'OK' if points are 1倍, 1倍+1倍UP, 1%, or empty/standard.
+        'X' if points exceed 1 (e.g. 2倍+, 1倍+2倍UP+, 2%+).
+    """
+    if points_raw is None or pd.isna(points_raw):
+        return "OK"
+
+    pts_str = str(points_raw).strip()
+    if not pts_str or pts_str in ["No disponible", "N/A", "nan", "-"]:
+        return "OK"
+
+    # Check for UP multiplier (e.g. "+9倍UP", "+2倍UP", "+5倍up")
+    up_match = re.search(r"\+\s*(\d+)\s*(?:倍|%)\s*(?:UP|up)?", pts_str)
+    if up_match and int(up_match.group(1)) > 1:
+        return "X"
+
+    # Check for base multiplier (e.g. "10倍", "5倍", "2倍", "10%", "5%")
+    base_matches = re.findall(r"(\d+(?:\.\d+)?)\s*(?:倍|%)", pts_str)
+    for match in base_matches:
+        if float(match) > 1.0:
+            return "X"
+
+    return "OK"
 
 
 def clean_product_url(raw_url: str) -> str:

@@ -27,4 +27,5 @@ if __name__ == "__main__":
         scraped_excel_input=OUTPUT_YAHOO_SCRAPED_EXCEL,
         list_products_file=CATALOG_LIST_EXCEL,
         output_excel=OUTPUT_YAHOO_COMPARISON_EXCEL,
+        check_points=False,
     )

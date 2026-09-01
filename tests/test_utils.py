@@ -5,6 +5,7 @@ from utils import (
     clean_points_text,
     clean_price_text,
     clean_product_url,
+    evaluate_point_status,
     extract_product_code,
     format_currency_yen,
     parse_numeric_price,
@@ -40,6 +41,27 @@ def test_clean_points_text() -> None:
     assert clean_points_text("5%（454pt）") == "5%（454pt）"
     assert clean_points_text("No disponible") == "N/A"
     assert clean_points_text("") == "N/A"
+
+
+def test_evaluate_point_status() -> None:
+    """Test point status evaluation for Rakuten (1倍 or 1倍+1倍UP)."""
+    assert evaluate_point_status("1倍") == "OK"
+    assert evaluate_point_status("1倍+1倍UP") == "OK"
+    assert evaluate_point_status("1倍 + 1倍UP") == "OK"
+    assert evaluate_point_status("1倍（121ポイント）") == "OK"
+    assert evaluate_point_status("1倍+1倍UP（242ポイント）") == "OK"
+    assert evaluate_point_status("1%（121pt）") == "OK"
+    assert evaluate_point_status("No disponible") == "OK"
+    assert evaluate_point_status(None) == "OK"
+
+    assert evaluate_point_status("10倍") == "X"
+    assert evaluate_point_status("5倍") == "X"
+    assert evaluate_point_status("2倍") == "X"
+    assert evaluate_point_status("1倍+9倍UP") == "X"
+    assert evaluate_point_status("1倍+2倍UP") == "X"
+    assert evaluate_point_status("2倍+1倍UP") == "X"
+    assert evaluate_point_status("5%（605pt）") == "X"
+    assert evaluate_point_status("10%（1,210pt）") == "X"
 
 
 def test_clean_product_url() -> None:
