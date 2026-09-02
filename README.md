@@ -123,7 +123,7 @@ poetry run python yahoo_compare_prices.py
 - 🟢 **Green (`#C6EFCE`)**: Scraped price matches the official catalog price exactly.
 - 🔴 **Red (`#FFC7CE`)**: Product code is in the catalog, but the store's published price differs.
 - 🟡 **Yellow (`#FFF2CC`)**: Product model code was not found in the official catalog or is unassigned.
-- **Point Status Column (Rakuten)**: Indicates `OK` for standard points (1倍, 1倍+1倍UP) or `X` if points multiplier exceeds 1.
+- **Point Status Column (Rakuten / Amazon)**: Indicates `⭕` when point thresholds are met (Rakuten $\le 1$倍/1倍+1倍UP; Amazon 1% to 2%) or `❌` if exceeded or non-compliant.
 
 ---
 

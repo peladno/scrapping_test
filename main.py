@@ -121,7 +121,8 @@ def run_amazon_pipeline(scrape: bool = True, compare: bool = True) -> None:
             scraped_excel_input=OUTPUT_AMAZON_SCRAPED_EXCEL,
             list_products_file=CATALOG_LIST_EXCEL,
             output_excel=OUTPUT_AMAZON_COMPARISON_EXCEL,
-            check_points=False,
+            check_points=True,
+            point_platform="amazon",
         )
 
     elapsed = time.time() - start_time

@@ -28,6 +28,7 @@ from config import (
 from utils import (
     clean_points_text,
     clean_price_text,
+    evaluate_amazon_point_status,
     extract_product_code,
     load_official_product_codes,
     save_excel_with_fallback,
@@ -181,6 +182,7 @@ def parse_amazon_search_page(
             ),
             "Price": price_text,
             "Points": points_text,
+            "points status": evaluate_amazon_point_status(points_text),
             "Product_URL": clean_url,
         })
 

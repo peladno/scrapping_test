@@ -23,6 +23,7 @@ from config import (
     TARGET_KEYWORD,
 )
 from utils import (
+    evaluate_amazon_point_status,
     evaluate_point_status,
     format_currency_yen,
     parse_numeric_price,
@@ -131,6 +132,7 @@ def compare_and_highlight_excel(
     list_products_file: str = CATALOG_LIST_EXCEL,
     output_excel: str = OUTPUT_COMPARISON_EXCEL,
     check_points: bool = True,
+    point_platform: str = "rakuten",
 ) -> None:
     """Compare prices and color-highlight Excel rows based on status.
 
@@ -144,6 +146,7 @@ def compare_and_highlight_excel(
         list_products_file: Official catalog Excel file.
         output_excel: Output Excel file with highlights.
         check_points: Whether to evaluate and include the Point Status column.
+        point_platform: E-commerce platform mode ('rakuten' or 'amazon').
     """
     catalog_prices = load_official_catalog_prices(list_products_file)
     print(
@@ -166,6 +169,9 @@ def compare_and_highlight_excel(
         f"Found {len(sheet_names)} sheet(s) in '{scraped_excel_input}'.",
         flush=True,
     )
+
+    is_amazon = point_platform.lower() == "amazon"
+    pt_col_name = "points status" if is_amazon else "Point Status"
 
     # Step 1: Process and write updated DataFrames with comparison columns
     try:
@@ -192,12 +198,19 @@ def compare_and_highlight_excel(
                     off_excl_list.append(format_currency_yen(p_excl))
 
                     if check_points:
-                        point_statuses.append(evaluate_point_status(p_points))
+                        if is_amazon:
+                            point_statuses.append(
+                                evaluate_amazon_point_status(p_points)
+                            )
+                        else:
+                            point_statuses.append(
+                                evaluate_point_status(p_points)
+                            )
 
                 df["Official_Price_Incl_Tax"] = off_incl_list
                 df["Official_Price_Excl_Tax"] = off_excl_list
                 if check_points:
-                    df["Point Status"] = point_statuses
+                    df[pt_col_name] = point_statuses
                 df["Comparison_Status"] = statuses
 
                 df.to_excel(writer, sheet_name=str(s_name), index=False)
@@ -231,12 +244,19 @@ def compare_and_highlight_excel(
                     off_excl_list.append(format_currency_yen(p_excl))
 
                     if check_points:
-                        point_statuses.append(evaluate_point_status(p_points))
+                        if is_amazon:
+                            point_statuses.append(
+                                evaluate_amazon_point_status(p_points)
+                            )
+                        else:
+                            point_statuses.append(
+                                evaluate_point_status(p_points)
+                            )
 
                 df["Official_Price_Incl_Tax"] = off_incl_list
                 df["Official_Price_Excl_Tax"] = off_excl_list
                 if check_points:
-                    df["Point Status"] = point_statuses
+                    df[pt_col_name] = point_statuses
                 df["Comparison_Status"] = statuses
 
                 df.to_excel(writer, sheet_name=str(s_name), index=False)
@@ -272,11 +292,11 @@ def compare_and_highlight_excel(
         except ValueError:
             continue
 
-        point_col_idx = (
-            header.index("Point Status") + 1
-            if "Point Status" in header
-            else None
-        )
+        point_col_idx = None
+        if "Point Status" in header:
+            point_col_idx = header.index("Point Status") + 1
+        elif "points status" in header:
+            point_col_idx = header.index("points status") + 1
 
         for row_idx in range(2, ws.max_row + 1):
             status_val = ws.cell(row=row_idx, column=status_col_idx).value
@@ -294,9 +314,9 @@ def compare_and_highlight_excel(
 
             if point_col_idx:
                 p_stat = ws.cell(row=row_idx, column=point_col_idx).value
-                if p_stat == "OK":
+                if p_stat in ["OK", "⭕"]:
                     total_points_ok += 1
-                elif p_stat == "X":
+                elif p_stat in ["X", "❌"]:
                     total_points_x += 1
 
             if target_fill:
@@ -314,7 +334,7 @@ def compare_and_highlight_excel(
     print(f"Total Code Not Found (YELLOW): {total_not_found}", flush=True)
     if check_points:
         print(
-            f"Point Status: {total_points_ok} OK, {total_points_x} X",
+            f"Point Status: {total_points_ok} ⭕, {total_points_x} ❌",
             flush=True,
         )
     print(

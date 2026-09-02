@@ -193,8 +193,10 @@ def test_parse_amazon_search_page() -> None:
     r1 = records[0]
     assert r1["ASIN"] == "B0006A03QA"
     assert r1["Product_Code"] == "G-46"
+    assert r1["points status"] == "⭕"
 
     r2 = records[1]
     assert r2["ASIN"] == "B00005OL44"
     assert r2["Product_Code"] == "G-2"
     assert "グローバル" in r2["Product"]
+    assert r2["points status"] == "❌"

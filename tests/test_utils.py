@@ -5,6 +5,7 @@ from utils import (
     clean_points_text,
     clean_price_text,
     clean_product_url,
+    evaluate_amazon_point_status,
     evaluate_point_status,
     extract_product_code,
     format_currency_yen,
@@ -45,23 +46,43 @@ def test_clean_points_text() -> None:
 
 def test_evaluate_point_status() -> None:
     """Test point status evaluation for Rakuten (1倍 or 1倍+1倍UP)."""
-    assert evaluate_point_status("1倍") == "OK"
-    assert evaluate_point_status("1倍+1倍UP") == "OK"
-    assert evaluate_point_status("1倍 + 1倍UP") == "OK"
-    assert evaluate_point_status("1倍（121ポイント）") == "OK"
-    assert evaluate_point_status("1倍+1倍UP（242ポイント）") == "OK"
-    assert evaluate_point_status("1%（121pt）") == "OK"
-    assert evaluate_point_status("No disponible") == "OK"
-    assert evaluate_point_status(None) == "OK"
+    assert evaluate_point_status("1倍") == "⭕"
+    assert evaluate_point_status("1倍+1倍UP") == "⭕"
+    assert evaluate_point_status("1倍 + 1倍UP") == "⭕"
+    assert evaluate_point_status("1倍（121ポイント）") == "⭕"
+    assert evaluate_point_status("1倍+1倍UP（242ポイント）") == "⭕"
+    assert evaluate_point_status("1%（121pt）") == "⭕"
+    assert evaluate_point_status("No disponible") == "⭕"
+    assert evaluate_point_status(None) == "⭕"
 
-    assert evaluate_point_status("10倍") == "X"
-    assert evaluate_point_status("5倍") == "X"
-    assert evaluate_point_status("2倍") == "X"
-    assert evaluate_point_status("1倍+9倍UP") == "X"
-    assert evaluate_point_status("1倍+2倍UP") == "X"
-    assert evaluate_point_status("2倍+1倍UP") == "X"
-    assert evaluate_point_status("5%（605pt）") == "X"
-    assert evaluate_point_status("10%（1,210pt）") == "X"
+    assert evaluate_point_status("10倍") == "❌"
+    assert evaluate_point_status("5倍") == "❌"
+    assert evaluate_point_status("2倍") == "❌"
+    assert evaluate_point_status("1倍+9倍UP") == "❌"
+    assert evaluate_point_status("1倍+2倍UP") == "❌"
+    assert evaluate_point_status("2倍+1倍UP") == "❌"
+    assert evaluate_point_status("5%（605pt）") == "❌"
+    assert evaluate_point_status("10%（1,210pt）") == "❌"
+
+
+def test_evaluate_amazon_point_status() -> None:
+    """Test Amazon points status evaluation (1% to 2% = ⭕, otherwise ❌)."""
+    assert evaluate_amazon_point_status("242 pt (2%)") == "⭕"
+    assert evaluate_amazon_point_status("121 pt (1%)") == "⭕"
+    assert evaluate_amazon_point_status("198 pt (2%)") == "⭕"
+    assert evaluate_amazon_point_status("1%") == "⭕"
+    assert evaluate_amazon_point_status("2%") == "⭕"
+    assert evaluate_amazon_point_status("1.5%") == "⭕"
+    assert evaluate_amazon_point_status("1倍") == "⭕"
+    assert evaluate_amazon_point_status("2倍") == "⭕"
+
+    assert evaluate_amazon_point_status("3%") == "❌"
+    assert evaluate_amazon_point_status("5%（454pt）") == "❌"
+    assert evaluate_amazon_point_status("10%") == "❌"
+    assert evaluate_amazon_point_status("0%") == "❌"
+    assert evaluate_amazon_point_status("N/A") == "❌"
+    assert evaluate_amazon_point_status("No disponible") == "❌"
+    assert evaluate_amazon_point_status(None) == "❌"
 
 
 def test_clean_product_url() -> None:

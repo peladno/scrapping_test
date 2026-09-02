@@ -367,34 +367,66 @@ def evaluate_point_status(points_raw: Any) -> str:
     """Evaluate if points meet the allowed threshold (1倍 or 1倍+1倍UP).
 
     Points cannot exceed 1x (except standard 1倍 or 1倍+1倍UP). Multipliers
-    greater than 1 (e.g. 2倍, 5倍, 10倍, 1倍+9倍UP, 5%) are marked 'X'.
+    greater than 1 (e.g. 2倍, 5倍, 10倍, 1倍+9倍UP, 5%) are marked '❌'.
 
     Args:
         points_raw: Raw points text from scraped Excel.
 
     Returns:
-        'OK' if points are 1倍, 1倍+1倍UP, 1%, or empty/standard.
-        'X' if points exceed 1 (e.g. 2倍+, 1倍+2倍UP+, 2%+).
+        '⭕' if points are 1倍, 1倍+1倍UP, 1%, or empty/standard.
+        '❌' if points exceed 1 (e.g. 2倍+, 1倍+2倍UP+, 2%+).
     """
     if points_raw is None or pd.isna(points_raw):
-        return "OK"
+        return "⭕"
 
     pts_str = str(points_raw).strip()
     if not pts_str or pts_str in ["No disponible", "N/A", "nan", "-"]:
-        return "OK"
+        return "⭕"
 
     # Check for UP multiplier (e.g. "+9倍UP", "+2倍UP", "+5倍up")
     up_match = re.search(r"\+\s*(\d+)\s*(?:倍|%)\s*(?:UP|up)?", pts_str)
     if up_match and int(up_match.group(1)) > 1:
-        return "X"
+        return "❌"
 
     # Check for base multiplier (e.g. "10倍", "5倍", "2倍", "10%", "5%")
     base_matches = re.findall(r"(\d+(?:\.\d+)?)\s*(?:倍|%)", pts_str)
     for match in base_matches:
         if float(match) > 1.0:
-            return "X"
+            return "❌"
 
-    return "OK"
+    return "⭕"
+
+
+def evaluate_amazon_point_status(points_raw: Any) -> str:
+    """Evaluate Amazon point percentage status.
+
+    Requirement: Points must be between 1% and 2% (inclusive).
+    Returns '⭕' if 1% <= rate <= 2%, otherwise '❌'.
+
+    Args:
+        points_raw: Raw points text (e.g. '242 pt (2%)', '1%', '5%').
+
+    Returns:
+        '⭕' if between 1% and 2% (inclusive), otherwise '❌'.
+    """
+    if points_raw is None or pd.isna(points_raw):
+        return "❌"
+
+    pts_str = str(points_raw).strip()
+    if not pts_str or pts_str in ["No disponible", "N/A", "nan", "-"]:
+        return "❌"
+
+    pct_match = re.search(r"(\d+(?:\.\d+)?)\s*%", pts_str)
+    if pct_match:
+        val = float(pct_match.group(1))
+        return "⭕" if 1.0 <= val <= 2.0 else "❌"
+
+    mult_match = re.search(r"(\d+(?:\.\d+)?)\s*倍", pts_str)
+    if mult_match:
+        val = float(mult_match.group(1))
+        return "⭕" if 1.0 <= val <= 2.0 else "❌"
+
+    return "❌"
 
 
 def clean_product_url(raw_url: str) -> str:
