@@ -9,6 +9,10 @@ from config import (
     YAHOO_PRICE_CLASS,
     YAHOO_TITLE_CLASS,
 )
+from amazon_scraper import (
+    build_amazon_search_url,
+    parse_amazon_search_page,
+)
 from rakuten_scraper import (
     build_rakuten_page_url,
     parse_rakuten_spec_table,
@@ -138,3 +142,59 @@ def test_parse_rakuten_spec_table() -> None:
         sample_spec_html_complex, ["GST-A58"]
     )
     assert code_complex == "GST-A58"
+
+
+def test_build_amazon_search_url() -> None:
+    """Test Amazon search pagination URL construction."""
+    url_p1 = build_amazon_search_url("GLOBAL 包丁", 1)
+    assert "https://www.amazon.co.jp/s?k=" in url_p1
+    assert "ref=sr_pg_1" in url_p1
+
+    url_p2 = build_amazon_search_url("GLOBAL 包丁", 2)
+    assert "page=2" in url_p2
+    assert "ref=sr_pg_2" in url_p2
+
+
+def test_parse_amazon_search_page() -> None:
+    """Test parsing Amazon Japan search result HTML cards."""
+    sample_amazon_card = """
+    <div data-component-type="s-search-result" data-asin="B0006A03QA">
+      <h2 class="s-line-clamp-1">Global</h2>
+      <h2>
+        <a class="a-text-normal"
+           href="/Global-Santoku-Length-G-46/dp/B0006A03QA">
+          Santoku Blade Length 7.1 inches (18 cm) G-46
+        </a>
+      </h2>
+      <span class="a-price">
+        <span class="a-offscreen">¥12,100</span>
+      </span>
+      <span class="a-color-price">242 pt (2%)</span>
+    </div>
+    <div data-component-type="s-search-result" data-asin="B003YUBLUQ">
+      <h2 class="s-line-clamp-1">KAI</h2>
+      <a class="a-text-normal" href="/KAI-AE5200/dp/B003YUBLUQ">
+        KAI Sekimagoroku Damascus 165mm
+      </a>
+      <span class="a-price"><span class="a-offscreen">¥8,491</span></span>
+    </div>
+    <div data-component-type="s-search-result" data-asin="B00005OL44">
+      <a class="a-text-normal" href="/dp/B00005OL44">
+        グローバル 包丁 牛刀 20cm G-2
+      </a>
+      <span class="a-price"><span class="a-offscreen">¥12,100</span></span>
+    </div>
+    """
+    records = parse_amazon_search_page(
+        sample_amazon_card, ["G-46", "G-2"]
+    )
+    # Competitor KAI should be excluded; Global and グローバル included
+    assert len(records) == 2
+    r1 = records[0]
+    assert r1["ASIN"] == "B0006A03QA"
+    assert r1["Product_Code"] == "G-46"
+
+    r2 = records[1]
+    assert r2["ASIN"] == "B00005OL44"
+    assert r2["Product_Code"] == "G-2"
+    assert "グローバル" in r2["Product"]

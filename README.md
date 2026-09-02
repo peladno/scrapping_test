@@ -42,18 +42,22 @@ scrapping/
 ## ⚙️ Installation & Setup
 
 ### 1. Install Dependencies
+
 ```bash
 # Install all required and development packages with Poetry
 poetry install
 ```
 
 ### 2. Configure Environment Variables (`.env`)
+
 Copy `.env.example` to create your local `.env` file:
+
 ```bash
 cp .env.example .env
 ```
 
 Configure `.env` with your input and output file paths:
+
 ```env
 # Master Input Excel Files
 RAKUTEN_MASTER_EXCEL="data/inputs/rakuten_stores.xlsx"
@@ -77,32 +81,49 @@ OUTPUT_YAHOO_COMPARISON_EXCEL="data/outputs/yahoo_price_comparison.xlsx"
 
 ## 📖 Usage Guide
 
-### 1. Run Scrapers
-Scrapers read target store URLs from the master input workbooks, iterate across catalog pages with polite rate-limiting, and produce a multi-sheet Excel file with a consolidated master sheet and individual store tabs:
+### 1. Unified CLI Orchestrator (`main.py`)
+
+Run the entire pipeline (scraping + comparison) or target specific platforms with a single command:
 
 ```bash
-# Scrape Rakuten Stores
-poetry run python rakuten_scraper.py
+# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan)
+poetry run python main.py
 
-# Scrape Yahoo Shopping Stores
-poetry run python yahoo_scraper.py
+# Run specific platform pipeline
+poetry run python main.py --platform rakuten
+poetry run python main.py --platform yahoo
+poetry run python main.py --platform amazon
+
+# Scrape only (skip price comparison)
+poetry run python main.py --platform all --scrape-only
+
+# Compare only (run on existing scraped Excel files)
+poetry run python main.py --platform all --compare-only
 ```
 
-### 2. Run Price Comparators
-The comparison scripts cross-reference scraped store prices with the official catalog (`CATALOG_LIST_EXCEL`) and highlight differences in Excel:
+---
+
+### 2. Standalone Scripts
+
+You can also run individual scrapers and comparators independently:
 
 ```bash
-# Compare Rakuten prices
-poetry run python compare_prices.py
+# Individual Scrapers
+poetry run python rakuten_scraper.py
+poetry run python yahoo_scraper.py
+poetry run python amazon_scraper.py
 
-# Compare Yahoo Shopping prices
+# Individual Comparators
+poetry run python compare_prices.py
 poetry run python yahoo_compare_prices.py
 ```
 
 #### 🎨 Report Color Highlights:
+
 - 🟢 **Green (`#C6EFCE`)**: Scraped price matches the official catalog price exactly.
 - 🔴 **Red (`#FFC7CE`)**: Product code is in the catalog, but the store's published price differs.
 - 🟡 **Yellow (`#FFF2CC`)**: Product model code was not found in the official catalog or is unassigned.
+- **Point Status Column (Rakuten)**: Indicates `OK` for standard points (1倍, 1倍+1倍UP) or `X` if points multiplier exceeds 1.
 
 ---
 

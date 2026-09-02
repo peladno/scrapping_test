@@ -27,3 +27,4 @@ data/outputs/*.xlsx
 .vscode/
 .idea/
 *.swp
+.agent

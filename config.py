@@ -69,6 +69,14 @@ OUTPUT_YAHOO_COMPARISON_EXCEL: str = _resolve_path(
     os.getenv("OUTPUT_YAHOO_COMPARISON_EXCEL", ""),
     OUTPUT_DIR / "yahoo_price_comparison.xlsx",
 )
+OUTPUT_AMAZON_SCRAPED_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_AMAZON_SCRAPED_EXCEL", ""),
+    OUTPUT_DIR / "amazon_prices_by_store.xlsx",
+)
+OUTPUT_AMAZON_COMPARISON_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_AMAZON_COMPARISON_EXCEL", ""),
+    OUTPUT_DIR / "amazon_price_comparison.xlsx",
+)
 
 # Scraping Settings
 DEFAULT_STORE_ID: str = os.getenv("DEFAULT_STORE_ID", "211966")
@@ -105,3 +113,15 @@ YAHOO_TITLE_CLASS: str = r"ItemTitle_SearchResultItemTitle"
 YAHOO_BRAND_CLASS: str = r"ItemBrand_SearchResultItemBrand"
 YAHOO_PRICE_CLASS: str = r"ItemPrice_ItemPrice|ItemPrice"
 YAHOO_POINTS_CLASS: str = r"ItemPointModal|PointText|PointRate"
+
+# ----------------------------------------------------------------------
+# Amazon Japan Scraping CSS Selectors / Search Settings
+# ----------------------------------------------------------------------
+AMAZON_SEARCH_KEYWORD: str = str(
+    os.getenv("AMAZON_SEARCH_KEYWORD") or "GLOBAL 包丁"
+)
+AMAZON_CARD_COMPONENT: str = r"s-search-result"
+AMAZON_TITLE_CLASS: str = r"a-text-normal"
+AMAZON_BRAND_CLASS: str = r"s-line-clamp-1"
+AMAZON_PRICE_CLASS: str = r"a-price"
+AMAZON_POINTS_CLASS: str = r"a-color-price"
