@@ -19,11 +19,14 @@ from config import (
     OUTPUT_SCRAPED_EXCEL,
     OUTPUT_YAHOO_COMPARISON_EXCEL,
     OUTPUT_YAHOO_SCRAPED_EXCEL,
+    OUTPUT_YODOBASHI_COMPARISON_EXCEL,
+    OUTPUT_YODOBASHI_SCRAPED_EXCEL,
     RAKUTEN_MASTER_EXCEL,
     YAHOO_MASTER_EXCEL,
 )
 from rakuten_scraper import scrape_all_rakuten_stores
 from yahoo_scraper import scrape_all_yahoo_stores
+from yodobashi_scraper import scrape_all_yodobashi_products
 
 # Configure UTF-8 encoding for Windows console output
 if hasattr(sys.stdout, "reconfigure"):
@@ -129,6 +132,39 @@ def run_amazon_pipeline(scrape: bool = True, compare: bool = True) -> None:
     print(f"✨ Amazon pipeline completed in {elapsed:.2f}s.")
 
 
+def run_yodobashi_pipeline(scrape: bool = True, compare: bool = True) -> None:
+    """Execute scraping and price comparison for Yodobashi Camera products.
+
+    Args:
+        scrape: If True, executes product scraping and saves Excel.
+        compare: If True, compares prices against official catalog.
+    """
+    print("\n" + "=" * 60)
+    print("🚀 PIPELINE: YODOBASHI CAMERA")
+    print("=" * 60)
+    start_time = time.time()
+
+    if scrape:
+        print("\n[Step 1/2] Scraping Yodobashi Camera products...")
+        scrape_all_yodobashi_products(
+            output_excel=OUTPUT_YODOBASHI_SCRAPED_EXCEL,
+            list_products_file=CATALOG_LIST_EXCEL,
+        )
+
+    if compare:
+        print("\n[Step 2/2] Comparing Yodobashi prices against catalog...")
+        compare_and_highlight_excel(
+            scraped_excel_input=OUTPUT_YODOBASHI_SCRAPED_EXCEL,
+            list_products_file=CATALOG_LIST_EXCEL,
+            output_excel=OUTPUT_YODOBASHI_COMPARISON_EXCEL,
+            check_points=True,
+            point_platform="yodobashi",
+        )
+
+    elapsed = time.time() - start_time
+    print(f"✨ Yodobashi pipeline completed in {elapsed:.2f}s.")
+
+
 def build_cli_parser() -> argparse.ArgumentParser:
     """Build command-line argument parser.
 
@@ -143,15 +179,16 @@ Examples:
   poetry run python main.py --platform rakuten
   poetry run python main.py --platform yahoo
   poetry run python main.py --platform amazon
+  poetry run python main.py --platform yodobashi
   poetry run python main.py --platform all
-  poetry run python main.py --platform amazon --scrape-only
+  poetry run python main.py --platform yodobashi --scrape-only
   poetry run python main.py --platform all --compare-only
         """,
     )
     parser.add_argument(
         "-p",
         "--platform",
-        choices=["rakuten", "yahoo", "amazon", "all"],
+        choices=["rakuten", "yahoo", "amazon", "yodobashi", "all"],
         default="all",
         help="Target platform to process (default: all)",
     )
@@ -194,6 +231,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.platform in ["amazon", "all"]:
         run_amazon_pipeline(scrape=scrape, compare=compare)
+
+    if args.platform in ["yodobashi", "all"]:
+        run_yodobashi_pipeline(scrape=scrape, compare=compare)
 
     total_elapsed = time.time() - total_start
     print("\n" + "=" * 60)

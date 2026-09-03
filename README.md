@@ -86,13 +86,14 @@ OUTPUT_YAHOO_COMPARISON_EXCEL="data/outputs/yahoo_price_comparison.xlsx"
 Run the entire pipeline (scraping + comparison) or target specific platforms with a single command:
 
 ```bash
-# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan)
+# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera)
 poetry run python main.py
 
 # Run specific platform pipeline
 poetry run python main.py --platform rakuten
 poetry run python main.py --platform yahoo
 poetry run python main.py --platform amazon
+poetry run python main.py --platform yodobashi
 
 # Scrape only (skip price comparison)
 poetry run python main.py --platform all --scrape-only
@@ -112,6 +113,7 @@ You can also run individual scrapers and comparators independently:
 poetry run python rakuten_scraper.py
 poetry run python yahoo_scraper.py
 poetry run python amazon_scraper.py
+poetry run python yodobashi_scraper.py
 
 # Individual Comparators
 poetry run python compare_prices.py
@@ -123,7 +125,7 @@ poetry run python yahoo_compare_prices.py
 - 🟢 **Green (`#C6EFCE`)**: Scraped price matches the official catalog price exactly.
 - 🔴 **Red (`#FFC7CE`)**: Product code is in the catalog, but the store's published price differs.
 - 🟡 **Yellow (`#FFF2CC`)**: Product model code was not found in the official catalog or is unassigned.
-- **Point Status Column (Rakuten / Amazon)**: Indicates `⭕` when point thresholds are met (Rakuten $\le 1$倍/1倍+1倍UP; Amazon 1% to 2%) or `❌` if exceeded or non-compliant.
+- **Point Status Column**: Indicates `⭕` when point thresholds are compliant (Rakuten & Yodobashi $\le 1\%$; Amazon 1% to 2%) or `❌` if exceeded or non-compliant.
 
 ---
 

@@ -18,6 +18,10 @@ from rakuten_scraper import (
     parse_rakuten_spec_table,
 )
 from yahoo_scraper import build_yahoo_page_url
+from yodobashi_scraper import (
+    build_yodobashi_search_url,
+    parse_yodobashi_search_page,
+)
 
 
 def test_build_rakuten_page_url_inshop() -> None:
@@ -200,3 +204,54 @@ def test_parse_amazon_search_page() -> None:
     assert r2["Product_Code"] == "G-2"
     assert "グローバル" in r2["Product"]
     assert r2["points status"] == "❌"
+
+
+def test_build_yodobashi_search_url() -> None:
+    """Test Yodobashi search pagination URL construction."""
+    url_p1 = build_yodobashi_search_url("global 包丁", 1)
+    assert "ginput=global+%E5%8C%85%E4%B8%81" in url_p1
+    assert "word=global+%E5%8C%85%E4%B8%81" in url_p1
+    assert "/p2/" not in url_p1
+
+    url_p2 = build_yodobashi_search_url("global 包丁", 2)
+    assert "https://www.yodobashi.com/p2/" in url_p2
+    assert "ginput=global+%E5%8C%85%E4%B8%81" in url_p2
+    assert "word=global+%E5%8C%85%E4%B8%81" in url_p2
+
+
+def test_parse_yodobashi_search_page() -> None:
+    """Test parsing Yodobashi Camera product cards from HTML."""
+    sample_yodobashi_html = """
+    <div class="srcResultItem_block" data-sku="100000001009346893">
+      <a href="/product/100000001009346893/">
+        <div class="pName">
+          <p>グローバル GLOBAL</p>
+          <p>三徳 18cm 日本製 G-46</p>
+        </div>
+      </a>
+      <span class="productPrice">￥12,100</span>
+      <span class="goldPoint">121 ゴールドポイント（1％還元）</span>
+    </div>
+    <div class="srcResultItem_block" data-sku="200000000000000000">
+      <a href="/product/200000000000000000/">
+        <div class="pName">
+          <p>貝印 KAI 旬 165mm</p>
+        </div>
+      </a>
+      <span class="productPrice">￥8,000</span>
+    </div>
+    """
+    records = parse_yodobashi_search_page(
+        sample_yodobashi_html, ["G-46"]
+    )
+    # Competitor Kai should be excluded
+    assert len(records) == 1
+    r = records[0]
+    assert r["SKU"] == "100000001009346893"
+    assert r["Product_Code"] == "G-46"
+    assert r["Price"] == "¥12,100"
+    assert r["Point Status"] == "⭕"
+    expected_url = (
+        "https://www.yodobashi.com/product/100000001009346893/"
+    )
+    assert expected_url in r["Product_URL"]

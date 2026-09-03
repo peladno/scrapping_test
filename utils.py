@@ -541,6 +541,12 @@ def _export_to_excel(
         if all_results:
             df_all = pd.DataFrame(all_results)
             df_all.to_excel(writer, sheet_name="All_Stores", index=False)
+        elif not store_dfs:
+            empty_df = pd.DataFrame(columns=[
+                "Store", "Company", "Product", "Product_Code",
+                "Price", "Points", "Point Status", "Product_URL",
+            ])
+            empty_df.to_excel(writer, sheet_name="All_Stores", index=False)
 
         used_sheets: Set[str] = set()
         for s_name, df_s in store_dfs.items():

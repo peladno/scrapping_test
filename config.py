@@ -77,6 +77,14 @@ OUTPUT_AMAZON_COMPARISON_EXCEL: str = _resolve_path(
     os.getenv("OUTPUT_AMAZON_COMPARISON_EXCEL", ""),
     OUTPUT_DIR / "amazon_price_comparison.xlsx",
 )
+OUTPUT_YODOBASHI_SCRAPED_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_YODOBASHI_SCRAPED_EXCEL", ""),
+    OUTPUT_DIR / "yodobashi_prices_by_store.xlsx",
+)
+OUTPUT_YODOBASHI_COMPARISON_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_YODOBASHI_COMPARISON_EXCEL", ""),
+    OUTPUT_DIR / "yodobashi_price_comparison.xlsx",
+)
 
 # Scraping Settings
 DEFAULT_STORE_ID: str = os.getenv("DEFAULT_STORE_ID", "211966")
@@ -125,3 +133,14 @@ AMAZON_TITLE_CLASS: str = r"a-text-normal"
 AMAZON_BRAND_CLASS: str = r"s-line-clamp-1"
 AMAZON_PRICE_CLASS: str = r"a-price"
 AMAZON_POINTS_CLASS: str = r"a-color-price"
+
+# ----------------------------------------------------------------------
+# Yodobashi Camera Scraping CSS Selectors / Search Settings
+# ----------------------------------------------------------------------
+YODOBASHI_SEARCH_KEYWORD: str = str(
+    os.getenv("YODOBASHI_SEARCH_KEYWORD") or "global 包丁"
+)
+YODOBASHI_CARD_CLASS: str = r"srcResultItem_block|js_productBox"
+YODOBASHI_TITLE_CLASS: str = r"pName"
+YODOBASHI_PRICE_CLASS: str = r"productPrice|pPrice|price"
+YODOBASHI_POINTS_CLASS: str = r"goldPoint|pPoint|point"
