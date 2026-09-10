@@ -85,6 +85,14 @@ OUTPUT_YODOBASHI_COMPARISON_EXCEL: str = _resolve_path(
     os.getenv("OUTPUT_YODOBASHI_COMPARISON_EXCEL", ""),
     OUTPUT_DIR / "yodobashi_price_comparison.xlsx",
 )
+OUTPUT_AQUA_SCRAPED_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_AQUA_SCRAPED_EXCEL", ""),
+    OUTPUT_DIR / "aqua_prices_by_store.xlsx",
+)
+OUTPUT_AQUA_COMPARISON_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_AQUA_COMPARISON_EXCEL", ""),
+    OUTPUT_DIR / "aqua_price_comparison.xlsx",
+)
 
 # Scraping Settings
 DEFAULT_STORE_ID: str = os.getenv("DEFAULT_STORE_ID", "211966")
@@ -144,3 +152,13 @@ YODOBASHI_CARD_CLASS: str = r"srcResultItem_block|js_productBox"
 YODOBASHI_TITLE_CLASS: str = r"pName"
 YODOBASHI_PRICE_CLASS: str = r"productPrice|pPrice|price"
 YODOBASHI_POINTS_CLASS: str = r"goldPoint|pPoint|point"
+
+# ----------------------------------------------------------------------
+# Import Shop Aqua Scraping CSS Selectors / Search Settings
+# ----------------------------------------------------------------------
+AQUA_SEARCH_KEYWORD: str = str(
+    os.getenv("AQUA_SEARCH_KEYWORD") or "グローバル"
+)
+AQUA_CARD_CLASS: str = r"fs-c-productListItem"
+AQUA_TITLE_CLASS: str = r"fs-c-productName__name"
+AQUA_PRICE_CLASS: str = r"fs-c-price__value"

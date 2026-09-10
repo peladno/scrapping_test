@@ -555,7 +555,7 @@ def _export_to_excel(
             ctr = 1
             while sheet_n in used_sheets or sheet_n == "All_Stores":
                 sfx = f"_{ctr}"
-                sheet_n = f"{base_s[:31-len(sfx)]}{sfx}"
+                sheet_n = f"{base_s[:31 - len(sfx)]}{sfx}"
                 ctr += 1
             used_sheets.add(sheet_n)
             df_s.to_excel(writer, sheet_name=sheet_n, index=False)

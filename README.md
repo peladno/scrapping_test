@@ -86,7 +86,7 @@ OUTPUT_YAHOO_COMPARISON_EXCEL="data/outputs/yahoo_price_comparison.xlsx"
 Run the entire pipeline (scraping + comparison) or target specific platforms with a single command:
 
 ```bash
-# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera)
+# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera, Import Shop Aqua)
 poetry run python main.py
 
 # Run specific platform pipeline
@@ -94,6 +94,7 @@ poetry run python main.py --platform rakuten
 poetry run python main.py --platform yahoo
 poetry run python main.py --platform amazon
 poetry run python main.py --platform yodobashi
+poetry run python main.py --platform aqua
 
 # Scrape only (skip price comparison)
 poetry run python main.py --platform all --scrape-only
@@ -114,6 +115,7 @@ poetry run python rakuten_scraper.py
 poetry run python yahoo_scraper.py
 poetry run python amazon_scraper.py
 poetry run python yodobashi_scraper.py
+poetry run python aqua_scraper.py
 
 # Individual Comparators
 poetry run python compare_prices.py

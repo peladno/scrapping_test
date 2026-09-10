@@ -13,6 +13,10 @@ from amazon_scraper import (
     build_amazon_search_url,
     parse_amazon_search_page,
 )
+from aqua_scraper import (
+    build_aqua_search_url,
+    parse_aqua_search_page,
+)
 from rakuten_scraper import (
     build_rakuten_page_url,
     parse_rakuten_spec_table,
@@ -255,3 +259,52 @@ def test_parse_yodobashi_search_page() -> None:
         "https://www.yodobashi.com/product/100000001009346893/"
     )
     assert expected_url in r["Product_URL"]
+
+
+def test_build_aqua_search_url() -> None:
+    """Test Import Shop Aqua search pagination URL construction."""
+    url_p1 = build_aqua_search_url("グローバル", 1)
+    assert "page=1" in url_p1
+    assert "keyword=%E3%82%B0%E3%83%AD%E3%83%BC%E3%83%90%E3%83%AB" in url_p1
+    assert "sort=keyword" in url_p1
+
+    url_p2 = build_aqua_search_url("グローバル", 2)
+    assert "page=2" in url_p2
+
+
+def test_parse_aqua_search_page() -> None:
+    """Test parsing Import Shop Aqua product cards from HTML."""
+    sample_aqua_html = """
+    <article class="fs-c-productListItem" data-product-id="3269">
+      <h2 class="fs-c-productName">
+        <a href="/c/item/glb-prem">
+          <span class="fs-c-productName__name">
+            【無料ラッピング】包丁 グローバル GLOBAL 三徳18cm G-46
+          </span>
+        </a>
+      </h2>
+      <div class="fs-c-productPrices">
+        <span class="fs-c-price__value">12,100</span>
+      </div>
+    </article>
+    <article class="fs-c-productListItem" data-product-id="9999">
+      <h2 class="fs-c-productName">
+        <a href="/c/item/other-brand">
+          <span class="fs-c-productName__name">
+            貝印 関孫六 ダマスカス 三徳 165mm
+          </span>
+        </a>
+      </h2>
+      <div class="fs-c-productPrices">
+        <span class="fs-c-price__value">8,000</span>
+      </div>
+    </article>
+    """
+    records = parse_aqua_search_page(sample_aqua_html, ["G-46"])
+    # Competitor Kai should be filtered out
+    assert len(records) == 1
+    r = records[0]
+    assert r["SKU"] == "3269"
+    assert r["Product_Code"] == "G-46"
+    assert r["Price"] == "¥12,100"
+    assert r["Product_URL"] == "https://www.importshopaqua.com/c/item/glb-prem"
