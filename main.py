@@ -18,6 +18,8 @@ from config import (
     OUTPUT_AQUA_COMPARISON_EXCEL,
     OUTPUT_AQUA_SCRAPED_EXCEL,
     OUTPUT_COMPARISON_EXCEL,
+    OUTPUT_FURAIPAN_COMPARISON_EXCEL,
+    OUTPUT_FURAIPAN_SCRAPED_EXCEL,
     OUTPUT_SCRAPED_EXCEL,
     OUTPUT_YAHOO_COMPARISON_EXCEL,
     OUTPUT_YAHOO_SCRAPED_EXCEL,
@@ -27,6 +29,7 @@ from config import (
     YAHOO_MASTER_EXCEL,
 )
 from aqua_scraper import scrape_all_aqua_products
+from furaipan_scraper import scrape_all_furaipan_products
 from rakuten_scraper import scrape_all_rakuten_stores
 from yahoo_scraper import scrape_all_yahoo_stores
 from yodobashi_scraper import scrape_all_yodobashi_products
@@ -200,6 +203,38 @@ def run_aqua_pipeline(scrape: bool = True, compare: bool = True) -> None:
     print(f"✨ Aqua pipeline completed in {elapsed:.2f}s.")
 
 
+def run_furaipan_pipeline(scrape: bool = True, compare: bool = True) -> None:
+    """Execute scraping and price comparison for Furaipan Club products.
+
+    Args:
+        scrape: If True, executes product scraping and saves Excel.
+        compare: If True, compares prices against official catalog.
+    """
+    print("\n" + "=" * 60)
+    print("🚀 PIPELINE: FURAIPAN CLUB")
+    print("=" * 60)
+    start_time = time.time()
+
+    if scrape:
+        print("\n[Step 1/2] Scraping Furaipan Club products...")
+        scrape_all_furaipan_products(
+            output_excel=OUTPUT_FURAIPAN_SCRAPED_EXCEL,
+            list_products_file=CATALOG_LIST_EXCEL,
+        )
+
+    if compare:
+        print("\n[Step 2/2] Comparing Furaipan prices against catalog...")
+        compare_and_highlight_excel(
+            scraped_excel_input=OUTPUT_FURAIPAN_SCRAPED_EXCEL,
+            list_products_file=CATALOG_LIST_EXCEL,
+            output_excel=OUTPUT_FURAIPAN_COMPARISON_EXCEL,
+            check_points=False,
+        )
+
+    elapsed = time.time() - start_time
+    print(f"✨ Furaipan pipeline completed in {elapsed:.2f}s.")
+
+
 def build_cli_parser() -> argparse.ArgumentParser:
     """Build command-line argument parser.
 
@@ -216,15 +251,24 @@ Examples:
   poetry run python main.py --platform amazon
   poetry run python main.py --platform yodobashi
   poetry run python main.py --platform aqua
+  poetry run python main.py --platform furaipan
   poetry run python main.py --platform all
-  poetry run python main.py --platform aqua --scrape-only
+  poetry run python main.py --platform furaipan --scrape-only
   poetry run python main.py --platform all --compare-only
         """,
     )
     parser.add_argument(
         "-p",
         "--platform",
-        choices=["rakuten", "yahoo", "amazon", "yodobashi", "aqua", "all"],
+        choices=[
+            "rakuten",
+            "yahoo",
+            "amazon",
+            "yodobashi",
+            "aqua",
+            "furaipan",
+            "all",
+        ],
         default="all",
         help="Target platform to process (default: all)",
     )
@@ -273,6 +317,9 @@ def main(argv: Optional[List[str]] = None) -> int:
 
     if args.platform in ["aqua", "all"]:
         run_aqua_pipeline(scrape=scrape, compare=compare)
+
+    if args.platform in ["furaipan", "all"]:
+        run_furaipan_pipeline(scrape=scrape, compare=compare)
 
     total_elapsed = time.time() - total_start
     print("\n" + "=" * 60)

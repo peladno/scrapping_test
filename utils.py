@@ -8,7 +8,7 @@ sanitizing sheet names, and saving Excel workbooks with fallback handling.
 import re
 import sys
 import time
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 import unicodedata
 import urllib.parse
 
@@ -100,10 +100,14 @@ JAPANESE_KNIFE_ONTOLOGY: Dict[str, str] = {
     "皮むき": "PEELING",
     "シャープナー": "SHARPENER",
     "研ぎ器": "SHARPENER",
+    "カッティングボード": "CUTTING_BOARD",
+    "まな板": "CUTTING_BOARD",
 }
 
 # (Series, Category, Length_cm) -> Catalog Model Code for Single Knives
-MODEL_ATTRIBUTE_MAP: Dict[Tuple[str, str, Optional[int]], str] = {
+MODEL_ATTRIBUTE_MAP: Dict[
+    Tuple[str, str, Optional[Union[int, float]]], str
+] = {
     # Standard Series
     ("STANDARD", "SANTOKU", 18): "G-46",
     ("STANDARD", "SANTOKU", 16): "G-57",
@@ -117,17 +121,36 @@ MODEL_ATTRIBUTE_MAP: Dict[Tuple[str, str, Optional[int]], str] = {
     ("STANDARD", "SLICER", 21): "G-3",
     ("STANDARD", "NAKIRI", 18): "G-5",
     ("STANDARD", "NAKIRI", 14): "GS-5",
+    ("STANDARD", "DEBA", 16.5): "IST-07",
+    ("STANDARD", "DEBA", 16): "IST-07",
+    ("STANDARD", "DEBA", 17): "IST-07",
+    ("STANDARD", "DEBA", 12): "IST-05",
+    ("STANDARD", "KODEBA", 12): "IST-05",
     ("STANDARD", "SHARPENER", None): "G-91/SB",
     # IST Series
     ("IST", "SANTOKU", 19): "IST-01",
+    ("IST", "SANTOKU", None): "IST-01",
     ("IST", "PETTY", 15): "IST-02",
-    ("IST", "KODEBA", 12): "IST-05",
+    ("IST", "PETTY", None): "IST-02",
+    ("IST", "PEELING", 8): "IST-03",
+    ("IST", "PEELING", None): "IST-03",
     ("IST", "BREAD", 20): "IST-04",
-    ("IST", "SHARPENER", None): "SHARPENER",
+    ("IST", "BREAD", None): "IST-04",
+    ("IST", "KODEBA", 12): "IST-05",
+    ("IST", "DEBA", 12): "IST-05",
+    ("IST", "DEBA", 16.5): "IST-07",
+    ("IST", "DEBA", 16): "IST-07",
+    ("IST", "DEBA", 17): "IST-07",
+    ("IST", "DEBA", None): "IST-05",
+    ("IST", "YANAGIBA", 24): "IST-06",
+    ("IST", "YANAGIBA", None): "IST-06",
+    ("IST", "SHARPENER", None): "GSS-03",
 }
 
 # (Series, Category, Length_cm, Set_Count) -> Catalog Model Code for Knife Sets
-MODEL_SET_ATTRIBUTE_MAP: Dict[Tuple[str, str, Optional[int], int], str] = {
+MODEL_SET_ATTRIBUTE_MAP: Dict[
+    Tuple[str, str, Optional[Union[int, float]], int], str
+] = {
     # Standard Series - Gyuto Sets
     ("STANDARD", "GYUTO", 16, 2): "GST-A58",
     ("STANDARD", "GYUTO", 20, 2): "GST-A2",
@@ -167,7 +190,7 @@ def normalize_japanese_text(text: str) -> str:
 
 def extract_knife_attributes(
     title: str,
-) -> Tuple[str, Optional[str], Optional[int], Optional[int]]:
+) -> Tuple[str, Optional[str], Optional[Union[int, float]], Optional[int]]:
     """Extract knife series, category, length, and set count from title.
 
     Args:
@@ -192,15 +215,17 @@ def extract_knife_attributes(
             category = cat
             break
 
-    # 3. Blade Length detection in cm (e.g. 18cm, 180mm, 18 センチ)
-    length_cm: Optional[int] = None
+    # 3. Blade Length detection in cm (e.g. 18cm, 180mm, 16.5cm, 18 センチ)
+    length_cm: Optional[Union[int, float]] = None
     cm_match = re.search(r"(\d+(?:\.\d+)?)\s*(?:cm|センチ)", norm_title, re.I)
     if cm_match:
-        length_cm = int(round(float(cm_match.group(1))))
+        val = float(cm_match.group(1))
+        length_cm = int(val) if val.is_integer() else val
     else:
         mm_match = re.search(r"(\d+)\s*mm", norm_title, re.I)
         if mm_match:
-            length_cm = int(round(float(mm_match.group(1)) / 10))
+            val_mm = float(mm_match.group(1)) / 10
+            length_cm = int(val_mm) if val_mm.is_integer() else val_mm
 
     # 4. Set count detection (e.g. 2点セット, 3点セット, 4点, セット)
     set_count: Optional[int] = None
@@ -226,6 +251,36 @@ def match_japanese_knife_model(title: str) -> Optional[str]:
     Returns:
         Official catalog model code if mapped, otherwise None.
     """
+    norm_title = normalize_japanese_text(title)
+
+    # Step 0: Check Cutting Board models
+    # (S -> GCB-04, M -> GCB-03, L -> GCB-02)
+    if (
+        "カッティングボード" in norm_title
+        or "まな板" in norm_title
+        or "CUTTING BOARD" in norm_title.upper()
+    ):
+        if (
+            re.search(r"[ (・_/\-]S\b|Sサイズ|Ｓ", norm_title, re.I)
+            or norm_title.endswith("S")
+            or norm_title.endswith("Ｓ")
+        ):
+            return "GCB-04"
+        if (
+            re.search(r"[ (・_/\-]M\b|Mサイズ|Ｍ", norm_title, re.I)
+            or norm_title.endswith("M")
+            or norm_title.endswith("Ｍ")
+        ):
+            return "GCB-03"
+        if (
+            re.search(
+                r"[ (・_/\-]L\b|Lサイズ|LARGE|ラージ|Ｌ", norm_title, re.I
+            )
+            or norm_title.endswith("L")
+            or norm_title.endswith("Ｌ")
+        ):
+            return "GCB-02"
+
     series, category, length_cm, set_count = extract_knife_attributes(title)
     if not category:
         return None
@@ -241,13 +296,24 @@ def match_japanese_knife_model(title: str) -> Optional[str]:
             return MODEL_SET_ATTRIBUTE_MAP[set_key_no_length]
 
     # Step B: Check Individual Knife mapping
+    matched_code: Optional[str] = None
     key = (series, category, length_cm)
     if key in MODEL_ATTRIBUTE_MAP:
-        return MODEL_ATTRIBUTE_MAP[key]
+        matched_code = MODEL_ATTRIBUTE_MAP[key]
+    else:
+        key_no_length = (series, category, None)
+        if key_no_length in MODEL_ATTRIBUTE_MAP:
+            matched_code = MODEL_ATTRIBUTE_MAP[key_no_length]
 
-    key_no_length = (series, category, None)
-    if key_no_length in MODEL_ATTRIBUTE_MAP:
-        return MODEL_ATTRIBUTE_MAP[key_no_length]
+    if matched_code:
+        is_left = bool(
+            re.search(r"左|左利き|左用|\(左\)|（左）", norm_title)
+        )
+        if matched_code == "IST-07" and is_left:
+            return "IST-07L"
+        if matched_code == "IST-05" and is_left:
+            return "IST-05L"
+        return matched_code
 
     return None
 
@@ -269,11 +335,18 @@ def extract_product_code(
 
     # Step 1: Explicit match in official codes list
     if official_codes:
-        for code in official_codes:
-            pattern = r"\b" + re.escape(code) + r"\b"
+        valid_codes = [
+            c for c in official_codes
+            if c and c not in ["型番", "プレシャスシーズにて取り扱い"]
+        ]
+        sorted_codes = sorted(valid_codes, key=len, reverse=True)
+        for code in sorted_codes:
+            pattern = (
+                r"(?<![A-Za-z0-9\-])"
+                + re.escape(code)
+                + r"(?![A-Za-z0-9\-])"
+            )
             if re.search(pattern, title, re.IGNORECASE):
-                return code
-            if code in title:
                 return code
 
     # Step 2: Regex prefix pattern matching

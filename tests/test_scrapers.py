@@ -17,6 +17,10 @@ from aqua_scraper import (
     build_aqua_search_url,
     parse_aqua_search_page,
 )
+from furaipan_scraper import (
+    extract_furaipan_item_links,
+    parse_furaipan_detail_page,
+)
 from rakuten_scraper import (
     build_rakuten_page_url,
     parse_rakuten_spec_table,
@@ -308,3 +312,62 @@ def test_parse_aqua_search_page() -> None:
     assert r["Product_Code"] == "G-46"
     assert r["Price"] == "¥12,100"
     assert r["Product_URL"] == "https://www.importshopaqua.com/c/item/glb-prem"
+
+
+def test_extract_furaipan_item_links() -> None:
+    """Test extracting detail page URLs from Furaipan group page HTML."""
+    sample_group_html = """
+    <div class="item_list">
+      <div class="item">
+        <a href="/items/global-santoku.html">
+          <img src="/img/santoku.jpg" />
+          <span>グローバル 三徳</span>
+        </a>
+      </div>
+      <div class="item">
+        <a href="https://www.furaipan.com/items/global-gyutou.html">
+          <img src="/img/gyutou.jpg" />
+          <span>グローバル 牛刀</span>
+        </a>
+      </div>
+      <div class="item">
+        <a href="/items/global-santoku.html">
+          <span>Duplicate link</span>
+        </a>
+      </div>
+    </div>
+    """
+    links = extract_furaipan_item_links(sample_group_html)
+    assert len(links) == 2
+    assert "https://www.furaipan.com/items/global-santoku.html" in links
+    assert "https://www.furaipan.com/items/global-gyutou.html" in links
+
+
+def test_parse_furaipan_detail_page() -> None:
+    """Test parsing product kinds from Furaipan product detail HTML."""
+    sample_detail_html = """
+    <div class="product_kind">
+      <p class="title">GLOBAL 三徳 18cm G-46</p>
+      <span class="price">12,100円(税込)</span>
+    </div>
+    <div class="product_kind">
+      <p class="title">GLOBAL シャープナー GSS-01</p>
+      <span class="price">¥5,500(税込)</span>
+    </div>
+    <div class="product_kind">
+      <p class="title">他社製品 包丁</p>
+      <span class="price">3,000円</span>
+    </div>
+    """
+    records = parse_furaipan_detail_page(
+        sample_detail_html,
+        "https://www.furaipan.com/items/global-santoku.html",
+        ["G-46", "GSS-01"],
+    )
+    # Competitor product should be excluded
+    assert len(records) == 2
+    assert records[0]["Store"] == "furaipan"
+    assert records[0]["Product_Code"] == "G-46"
+    assert records[0]["Price"] == "¥12,100"
+    assert records[1]["Product_Code"] == "GSS-01"
+    assert records[1]["Price"] == "¥5,500"

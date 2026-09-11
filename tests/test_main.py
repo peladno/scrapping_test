@@ -32,6 +32,7 @@ def test_build_cli_parser_mutually_exclusive() -> None:
         parser.parse_args(["--scrape-only", "--compare-only"])
 
 
+@patch("main.run_furaipan_pipeline")
 @patch("main.run_aqua_pipeline")
 @patch("main.run_yodobashi_pipeline")
 @patch("main.run_amazon_pipeline")
@@ -43,6 +44,7 @@ def test_main_runs_all_by_default(
     mock_amazon: MagicMock,
     mock_yodobashi: MagicMock,
     mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
 ) -> None:
     """Test main runs all pipelines by default with scrape and compare."""
     exit_code = main([])
@@ -52,8 +54,10 @@ def test_main_runs_all_by_default(
     assert mock_amazon.called
     assert mock_yodobashi.called
     assert mock_aqua.called
+    assert mock_furaipan.called
 
 
+@patch("main.run_furaipan_pipeline")
 @patch("main.run_aqua_pipeline")
 @patch("main.run_yodobashi_pipeline")
 @patch("main.run_amazon_pipeline")
@@ -65,6 +69,7 @@ def test_main_runs_rakuten_only(
     mock_amazon: MagicMock,
     mock_yodobashi: MagicMock,
     mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
 ) -> None:
     """Test main only runs Rakuten when specified."""
     exit_code = main(["--platform", "rakuten", "--compare-only"])
@@ -76,8 +81,10 @@ def test_main_runs_rakuten_only(
     assert not mock_amazon.called
     assert not mock_yodobashi.called
     assert not mock_aqua.called
+    assert not mock_furaipan.called
 
 
+@patch("main.run_furaipan_pipeline")
 @patch("main.run_aqua_pipeline")
 @patch("main.run_yodobashi_pipeline")
 @patch("main.run_amazon_pipeline")
@@ -89,6 +96,7 @@ def test_main_runs_amazon_only(
     mock_amazon: MagicMock,
     mock_yodobashi: MagicMock,
     mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
 ) -> None:
     """Test main only runs Amazon when specified."""
     exit_code = main(["--platform", "amazon", "--scrape-only"])
@@ -100,8 +108,10 @@ def test_main_runs_amazon_only(
     assert not mock_yahoo.called
     assert not mock_yodobashi.called
     assert not mock_aqua.called
+    assert not mock_furaipan.called
 
 
+@patch("main.run_furaipan_pipeline")
 @patch("main.run_aqua_pipeline")
 @patch("main.run_yodobashi_pipeline")
 @patch("main.run_amazon_pipeline")
@@ -113,6 +123,7 @@ def test_main_runs_yodobashi_only(
     mock_amazon: MagicMock,
     mock_yodobashi: MagicMock,
     mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
 ) -> None:
     """Test main only runs Yodobashi when specified."""
     exit_code = main(["--platform", "yodobashi"])
@@ -124,8 +135,10 @@ def test_main_runs_yodobashi_only(
     assert not mock_yahoo.called
     assert not mock_amazon.called
     assert not mock_aqua.called
+    assert not mock_furaipan.called
 
 
+@patch("main.run_furaipan_pipeline")
 @patch("main.run_aqua_pipeline")
 @patch("main.run_yodobashi_pipeline")
 @patch("main.run_amazon_pipeline")
@@ -137,6 +150,7 @@ def test_main_runs_aqua_only(
     mock_amazon: MagicMock,
     mock_yodobashi: MagicMock,
     mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
 ) -> None:
     """Test main only runs Import Shop Aqua when specified."""
     exit_code = main(["--platform", "aqua"])
@@ -148,3 +162,31 @@ def test_main_runs_aqua_only(
     assert not mock_yahoo.called
     assert not mock_amazon.called
     assert not mock_yodobashi.called
+    assert not mock_furaipan.called
+
+
+@patch("main.run_furaipan_pipeline")
+@patch("main.run_aqua_pipeline")
+@patch("main.run_yodobashi_pipeline")
+@patch("main.run_amazon_pipeline")
+@patch("main.run_rakuten_pipeline")
+@patch("main.run_yahoo_pipeline")
+def test_main_runs_furaipan_only(
+    mock_yahoo: MagicMock,
+    mock_rakuten: MagicMock,
+    mock_amazon: MagicMock,
+    mock_yodobashi: MagicMock,
+    mock_aqua: MagicMock,
+    mock_furaipan: MagicMock,
+) -> None:
+    """Test main only runs Furaipan Club when specified."""
+    exit_code = main(["--platform", "furaipan"])
+    assert exit_code == 0
+    mock_furaipan.assert_called_once_with(
+        scrape=True, compare=True
+    )
+    assert not mock_rakuten.called
+    assert not mock_yahoo.called
+    assert not mock_amazon.called
+    assert not mock_yodobashi.called
+    assert not mock_aqua.called

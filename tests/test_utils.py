@@ -138,6 +138,30 @@ def test_japanese_fuzzy_knife_matching() -> None:
     title_ist = "GLOBAL-IST 万能包丁 19cm イスト"
     assert extract_product_code(title_ist, None) == "IST-01"
 
+    # Deba 16.5cm right-handed -> IST-07
+    title_deba_165 = "グローバルイスト出刃16.5cm（右利き用）"
+    assert extract_product_code(title_deba_165, None) == "IST-07"
+
+    # Deba 16.5cm left-handed -> IST-07L
+    title_deba_165_left = "グローバルイスト出刃16.5cm（左利き用）"
+    assert extract_product_code(title_deba_165_left, None) == "IST-07L"
+
+    # Simple Deba 16.5cm -> IST-07
+    title_deba_simple = "GLOBAL 包丁 出刃16.5cm"
+    assert extract_product_code(title_deba_simple, None) == "IST-07"
+
+    # Cutting board S -> GCB-04
+    title_board_s = "グローバル・カッティングボードＳ"
+    assert extract_product_code(title_board_s, None) == "GCB-04"
+
+    # Cutting board M -> GCB-03
+    title_board_m = "グローバル・カッティングボードM"
+    assert extract_product_code(title_board_m, None) == "GCB-03"
+
+    # Cutting board L -> GCB-02
+    title_board_l = "グローバル・カッティングボードＬ"
+    assert extract_product_code(title_board_l, None) == "GCB-02"
+
 
 def test_sanitize_sheet_name() -> None:
     """Test Excel sheet name sanitization and max 31 char limit."""

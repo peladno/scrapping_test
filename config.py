@@ -93,6 +93,14 @@ OUTPUT_AQUA_COMPARISON_EXCEL: str = _resolve_path(
     os.getenv("OUTPUT_AQUA_COMPARISON_EXCEL", ""),
     OUTPUT_DIR / "aqua_price_comparison.xlsx",
 )
+OUTPUT_FURAIPAN_SCRAPED_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_FURAIPAN_SCRAPED_EXCEL", ""),
+    OUTPUT_DIR / "furaipan_prices_by_store.xlsx",
+)
+OUTPUT_FURAIPAN_COMPARISON_EXCEL: str = _resolve_path(
+    os.getenv("OUTPUT_FURAIPAN_COMPARISON_EXCEL", ""),
+    OUTPUT_DIR / "furaipan_price_comparison.xlsx",
+)
 
 # Scraping Settings
 DEFAULT_STORE_ID: str = os.getenv("DEFAULT_STORE_ID", "211966")
@@ -104,9 +112,76 @@ COURTESY_PAUSE_SECONDS: float = float(
 )
 
 # ----------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Target Brand / Product Keyword Filtering
 # ----------------------------------------------------------------------
 TARGET_KEYWORD: str = str(os.getenv("TARGET_KEYWORD") or "GLOBAL")
+
+# ----------------------------------------------------------------------
+# Platform Base & Search URLs (Configurable via .env or config.py)
+# ----------------------------------------------------------------------
+# Rakuten URLs
+RAKUTEN_SEARCH_BASE_URL: str = str(
+    os.getenv("RAKUTEN_SEARCH_BASE_URL")
+    or "https://search.rakuten.co.jp/search/mall/"
+)
+RAKUTEN_INSHOP_BASE_URL: str = str(
+    os.getenv("RAKUTEN_INSHOP_BASE_URL")
+    or "https://search.rakuten.co.jp/search/inshop-mall/"
+)
+
+# Yahoo Shopping URLs
+YAHOO_SEARCH_BASE_URL: str = str(
+    os.getenv("YAHOO_SEARCH_BASE_URL")
+    or "https://shopping.yahoo.co.jp/search/"
+)
+YAHOO_STORE_BASE_URL: str = str(
+    os.getenv("YAHOO_STORE_BASE_URL")
+    or "https://store.shopping.yahoo.co.jp/"
+)
+
+# Amazon Japan URLs
+AMAZON_BASE_URL: str = str(
+    os.getenv("AMAZON_BASE_URL")
+    or "https://www.amazon.co.jp"
+)
+AMAZON_SEARCH_URL: str = str(
+    os.getenv("AMAZON_SEARCH_URL")
+    or "https://www.amazon.co.jp/s"
+)
+
+# Yodobashi Camera URLs
+YODOBASHI_BASE_URL: str = str(
+    os.getenv("YODOBASHI_BASE_URL")
+    or "https://www.yodobashi.com"
+)
+YODOBASHI_SEARCH_URL: str = str(
+    os.getenv("YODOBASHI_SEARCH_URL")
+    or "https://www.yodobashi.com/"
+)
+
+# Import Shop Aqua URLs
+AQUA_BASE_URL: str = str(
+    os.getenv("AQUA_BASE_URL")
+    or "https://www.importshopaqua.com"
+)
+AQUA_SEARCH_URL: str = str(
+    os.getenv("AQUA_SEARCH_URL")
+    or "https://www.importshopaqua.com/p/search"
+)
+
+# Furaipan Club URLs
+FURAIPAN_BASE_URL: str = str(
+    os.getenv("FURAIPAN_BASE_URL")
+    or "https://www.furaipan.com"
+)
+FURAIPAN_GROUP_URL: str = str(
+    os.getenv("FURAIPAN_GROUP_URL")
+    or (
+        "https://www.furaipan.com/items/groups/"
+        "kitchen-knives-and-cutting-boards"
+    )
+)
 
 # ----------------------------------------------------------------------
 # Rakuten Scraping CSS Selectors / Class Patterns
@@ -162,3 +237,12 @@ AQUA_SEARCH_KEYWORD: str = str(
 AQUA_CARD_CLASS: str = r"fs-c-productListItem"
 AQUA_TITLE_CLASS: str = r"fs-c-productName__name"
 AQUA_PRICE_CLASS: str = r"fs-c-price__value"
+
+# ----------------------------------------------------------------------
+# Furaipan Club Scraping CSS Selectors / Search Settings
+# ----------------------------------------------------------------------
+FURAIPAN_ITEM_LIST_CLASS: str = r"item_list"
+FURAIPAN_ITEM_CLASS: str = r"\bitem\b"
+FURAIPAN_PRODUCT_KIND_CLASS: str = r"product_kind"
+FURAIPAN_TITLE_CLASS: str = r"title"
+FURAIPAN_PRICE_CLASS: str = r"price"

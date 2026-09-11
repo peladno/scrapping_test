@@ -16,7 +16,9 @@ import pandas as pd
 import requests
 
 from config import (
+    AMAZON_BASE_URL,
     AMAZON_SEARCH_KEYWORD,
+    AMAZON_SEARCH_URL,
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
     HTTP_RETRIES,
@@ -76,9 +78,9 @@ def build_amazon_search_url(keyword: str, page: int = 1) -> str:
     """
     encoded_kw = urllib.parse.quote_plus(keyword)
     if page <= 1:
-        return f"https://www.amazon.co.jp/s?k={encoded_kw}&ref=sr_pg_1"
+        return f"{AMAZON_SEARCH_URL}?k={encoded_kw}&ref=sr_pg_1"
     return (
-        f"https://www.amazon.co.jp/s?k={encoded_kw}"
+        f"{AMAZON_SEARCH_URL}?k={encoded_kw}"
         f"&page={page}&ref=sr_pg_{page}"
     )
 
@@ -104,10 +106,8 @@ def parse_amazon_search_page(
 
     soup = BeautifulSoup(html_content, "html.parser")
     items = soup.find_all(
-        "div", attrs={"data-component-type": "s-search-result"}
+        "div", {"data-component-type": "s-search-result"}
     )
-    if not items:
-        items = soup.find_all("div", attrs={"data-asin": True})
 
     results: List[Dict[str, str]] = []
     seen_asins: Set[str] = set()
@@ -117,15 +117,11 @@ def parse_amazon_search_page(
         if not asin or asin in seen_asins:
             continue
 
-        # Extract title
+        # Extract product title
         title_link = item.find("a", class_=re.compile(r"a-text-normal"))
         title = title_link.get_text(strip=True) if title_link else ""
         if not title:
-            h2_tags = item.find_all("h2")
-            if len(h2_tags) > 1:
-                title = h2_tags[1].get_text(strip=True)
-            elif h2_tags:
-                title = h2_tags[0].get_text(strip=True)
+            continue
 
         # Extract brand tag if present
         brand_el = item.find("h2", class_=re.compile(r"s-line-clamp-1"))
@@ -139,7 +135,7 @@ def parse_amazon_search_page(
         # Extract direct URL
         raw_href = title_link.get("href", "") if title_link else ""
         if raw_href.startswith("/"):
-            raw_href = f"https://www.amazon.co.jp{raw_href}"
+            raw_href = f"{AMAZON_BASE_URL.rstrip('/')}{raw_href}"
         clean_url = raw_href.split("?")[0] if "?" in raw_href else raw_href
 
         # Strict Filter: Omit items if title does not contain

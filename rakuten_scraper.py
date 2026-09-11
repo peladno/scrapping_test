@@ -28,6 +28,7 @@ from config import (
     RAKUTEN_MASTER_EXCEL,
     RAKUTEN_POINTS_CLASS,
     RAKUTEN_PRICE_CLASS,
+    RAKUTEN_SEARCH_BASE_URL,
     RAKUTEN_SHEET_NAME,
     RAKUTEN_SPEC_TABLE_ATTR,
     RAKUTEN_TITLE_CLASS,
@@ -119,8 +120,9 @@ def build_rakuten_page_url(search_url: str, page: int) -> str:
     if m_inshop:
         keyword = m_inshop.group(1)
         sid = m_inshop.group(2)
+        base_search = RAKUTEN_SEARCH_BASE_URL.rstrip("/")
         return (
-            f"https://search.rakuten.co.jp/search/mall/{keyword}/"
+            f"{base_search}/{keyword}/"
             f"?p={page}&sid={sid}"
         )
 

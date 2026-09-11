@@ -14,8 +14,12 @@ scrapping/
 ├── utils.py                  # Shared utilities (parsing, cleaning, regex, Excel export)
 ├── rakuten_scraper.py        # Rakuten store scraper with dynamic pagination handling
 ├── yahoo_scraper.py          # Yahoo Shopping store scraper with card-level parsing
-├── compare_prices.py         # Rakuten price comparator vs official catalog
-├── yahoo_compare_prices.py   # Yahoo Shopping price comparator vs official catalog
+├── amazon_scraper.py         # Amazon Japan scraper
+├── yodobashi_scraper.py      # Yodobashi Camera scraper
+├── aqua_scraper.py           # Import Shop Aqua scraper
+├── furaipan_scraper.py       # Furaipan Club catalog scraper
+├── compare_prices.py         # Universal / Rakuten price comparator vs catalog
+├── yahoo_compare_prices.py   # Yahoo Shopping price comparator vs catalog
 ├── data/
 │   ├── inputs/               # Master input Excel workbooks (ignored by Git)
 │   └── outputs/              # Generated scraped & comparison Excel reports (ignored by Git)
@@ -23,7 +27,8 @@ scrapping/
 │   ├── conftest.py
 │   ├── test_utils.py
 │   ├── test_compare_prices.py
-│   └── test_scrapers.py
+│   ├── test_scrapers.py
+│   └── test_main.py
 ├── .env.example              # Environment variables template
 ├── .gitignore                # Git exclusion rules (Excel files, .env, pycache, venv)
 ├── pyproject.toml            # Poetry configuration, dependencies, and tool settings
@@ -73,6 +78,10 @@ OUTPUT_SCRAPED_EXCEL="data/outputs/rakuten_prices_by_store.xlsx"
 OUTPUT_COMPARISON_EXCEL="data/outputs/rakuten_price_comparison.xlsx"
 OUTPUT_YAHOO_SCRAPED_EXCEL="data/outputs/yahoo_prices_by_store.xlsx"
 OUTPUT_YAHOO_COMPARISON_EXCEL="data/outputs/yahoo_price_comparison.xlsx"
+OUTPUT_AQUA_SCRAPED_EXCEL="data/outputs/aqua_prices_by_store.xlsx"
+OUTPUT_AQUA_COMPARISON_EXCEL="data/outputs/aqua_price_comparison.xlsx"
+OUTPUT_FURAIPAN_SCRAPED_EXCEL="data/outputs/furaipan_prices_by_store.xlsx"
+OUTPUT_FURAIPAN_COMPARISON_EXCEL="data/outputs/furaipan_price_comparison.xlsx"
 ```
 
 > 🔒 **Security Notice:** All `.xlsx` files and `.env` files are excluded in `.gitignore` to prevent confidential data, proprietary store lists, or catalog prices from being committed to Git.
@@ -86,7 +95,7 @@ OUTPUT_YAHOO_COMPARISON_EXCEL="data/outputs/yahoo_price_comparison.xlsx"
 Run the entire pipeline (scraping + comparison) or target specific platforms with a single command:
 
 ```bash
-# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera, Import Shop Aqua)
+# Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera, Aqua, Furaipan)
 poetry run python main.py
 
 # Run specific platform pipeline
@@ -95,6 +104,7 @@ poetry run python main.py --platform yahoo
 poetry run python main.py --platform amazon
 poetry run python main.py --platform yodobashi
 poetry run python main.py --platform aqua
+poetry run python main.py --platform furaipan
 
 # Scrape only (skip price comparison)
 poetry run python main.py --platform all --scrape-only
@@ -116,6 +126,7 @@ poetry run python yahoo_scraper.py
 poetry run python amazon_scraper.py
 poetry run python yodobashi_scraper.py
 poetry run python aqua_scraper.py
+poetry run python furaipan_scraper.py
 
 # Individual Comparators
 poetry run python compare_prices.py

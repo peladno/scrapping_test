@@ -16,9 +16,11 @@ from curl_cffi import requests as cffi_requests
 import pandas as pd
 
 from config import (
+    AQUA_BASE_URL,
     AQUA_CARD_CLASS,
     AQUA_PRICE_CLASS,
     AQUA_SEARCH_KEYWORD,
+    AQUA_SEARCH_URL,
     AQUA_TITLE_CLASS,
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
@@ -82,7 +84,7 @@ def build_aqua_search_url(
     """
     encoded_kw = urllib.parse.quote(keyword)
     return (
-        f"https://www.importshopaqua.com/p/search"
+        f"{AQUA_SEARCH_URL}"
         f"?keyword={encoded_kw}&page={page}&sort={sort}"
     )
 
@@ -142,7 +144,7 @@ def parse_aqua_search_page(
         link_el = card.find("a", href=True)
         raw_href = link_el.get("href", "") if link_el else ""
         if raw_href.startswith("/"):
-            raw_href = f"https://www.importshopaqua.com{raw_href}"
+            raw_href = f"{AQUA_BASE_URL.rstrip('/')}{raw_href}"
         clean_url = raw_href.split("?")[0] if "?" in raw_href else raw_href
 
         # Avoid duplicate product IDs on same page

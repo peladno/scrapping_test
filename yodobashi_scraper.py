@@ -23,7 +23,9 @@ from config import (
     MAX_PAGES_PER_STORE,
     OUTPUT_YODOBASHI_SCRAPED_EXCEL,
     TARGET_KEYWORD,
+    YODOBASHI_BASE_URL,
     YODOBASHI_SEARCH_KEYWORD,
+    YODOBASHI_SEARCH_URL,
 )
 from utils import (
     clean_points_text,
@@ -75,12 +77,13 @@ def build_yodobashi_search_url(keyword: str, page: int = 1) -> str:
         Full Yodobashi search URL with ginput and word parameters.
     """
     encoded_kw = urllib.parse.quote_plus(keyword)
+    base_search = YODOBASHI_SEARCH_URL.rstrip("/")
     if page <= 1:
         return (
-            f"https://www.yodobashi.com/?ginput={encoded_kw}&word={encoded_kw}"
+            f"{base_search}/?ginput={encoded_kw}&word={encoded_kw}"
         )
     return (
-        f"https://www.yodobashi.com/p{page}/"
+        f"{YODOBASHI_BASE_URL.rstrip('/')}/p{page}/"
         f"?ginput={encoded_kw}&word={encoded_kw}"
     )
 
@@ -145,7 +148,7 @@ def parse_yodobashi_search_page(
         link_el = card.find("a", href=re.compile(r"/product/"))
         raw_href = link_el.get("href", "") if link_el else ""
         if raw_href.startswith("/"):
-            raw_href = f"https://www.yodobashi.com{raw_href}"
+            raw_href = f"{YODOBASHI_BASE_URL.rstrip('/')}{raw_href}"
         clean_url = raw_href.split("?")[0] if "?" in raw_href else raw_href
 
         # Extract Price
