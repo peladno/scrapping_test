@@ -6,11 +6,17 @@ loaded from environment variables (.env) with robust defaults.
 """
 
 import os
+import sys
 from pathlib import Path
 from dotenv import load_dotenv
 
 # Project root directory path
-BASE_DIR: Path = Path(__file__).resolve().parent.parent
+# (handles running as script or frozen PyInstaller executable)
+BASE_DIR: Path = (
+    Path(sys.executable).resolve().parent
+    if getattr(sys, "frozen", False)
+    else Path(__file__).resolve().parent.parent
+)
 
 # Load environment variables from .env file
 load_dotenv(BASE_DIR / ".env")

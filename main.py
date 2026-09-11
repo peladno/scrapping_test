@@ -235,6 +235,42 @@ def run_furaipan_pipeline(scrape: bool = True, compare: bool = True) -> None:
     print(f"✨ Furaipan pipeline completed in {elapsed:.2f}s.")
 
 
+def dispatch_pipeline(
+    platform: str = "all", scrape: bool = True, compare: bool = True
+) -> None:
+    """Execute requested scraping and comparison pipeline.
+
+    Args:
+        platform: Target platform identifier or 'all'.
+        scrape: Whether to scrape products from the web.
+        compare: Whether to perform official price comparison.
+    """
+    total_start = time.time()
+
+    if platform in ["rakuten", "all"]:
+        run_rakuten_pipeline(scrape=scrape, compare=compare)
+
+    if platform in ["yahoo", "all"]:
+        run_yahoo_pipeline(scrape=scrape, compare=compare)
+
+    if platform in ["amazon", "all"]:
+        run_amazon_pipeline(scrape=scrape, compare=compare)
+
+    if platform in ["yodobashi", "all"]:
+        run_yodobashi_pipeline(scrape=scrape, compare=compare)
+
+    if platform in ["aqua", "all"]:
+        run_aqua_pipeline(scrape=scrape, compare=compare)
+
+    if platform in ["furaipan", "all"]:
+        run_furaipan_pipeline(scrape=scrape, compare=compare)
+
+    total_elapsed = time.time() - total_start
+    print("\n" + "=" * 60)
+    print(f"🎉 All requested pipelines finished in {total_elapsed:.2f}s.")
+    print("=" * 60)
+
+
 def build_cli_parser() -> argparse.ArgumentParser:
     """Build command-line argument parser.
 
@@ -246,14 +282,14 @@ def build_cli_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+  poetry run python main.py
+  poetry run python main.py -i
   poetry run python main.py --platform rakuten
   poetry run python main.py --platform yahoo
   poetry run python main.py --platform amazon
   poetry run python main.py --platform yodobashi
   poetry run python main.py --platform aqua
   poetry run python main.py --platform furaipan
-  poetry run python main.py --platform all
-  poetry run python main.py --platform furaipan --scrape-only
   poetry run python main.py --platform all --compare-only
         """,
     )
@@ -271,6 +307,14 @@ Examples:
         ],
         default="all",
         help="Target platform to process (default: all)",
+    )
+    parser.add_argument(
+        "-i",
+        "--interactive",
+        "--menu",
+        action="store_true",
+        dest="interactive",
+        help="Launch interactive terminal menu",
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
@@ -295,36 +339,24 @@ def main(argv: Optional[List[str]] = None) -> int:
     Returns:
         Exit code (0 for success, non-zero for error).
     """
+    # Auto-launch interactive menu if run without arguments in terminal
+    if argv is None and len(sys.argv) == 1 and sys.stdin.isatty():
+        from core.menu import launch_interactive_menu
+        launch_interactive_menu(dispatch_pipeline)
+        return 0
+
     parser = build_cli_parser()
     args = parser.parse_args(argv)
+
+    if getattr(args, "interactive", False):
+        from core.menu import launch_interactive_menu
+        launch_interactive_menu(dispatch_pipeline)
+        return 0
 
     scrape = not args.compare_only
     compare = not args.scrape_only
 
-    total_start = time.time()
-
-    if args.platform in ["rakuten", "all"]:
-        run_rakuten_pipeline(scrape=scrape, compare=compare)
-
-    if args.platform in ["yahoo", "all"]:
-        run_yahoo_pipeline(scrape=scrape, compare=compare)
-
-    if args.platform in ["amazon", "all"]:
-        run_amazon_pipeline(scrape=scrape, compare=compare)
-
-    if args.platform in ["yodobashi", "all"]:
-        run_yodobashi_pipeline(scrape=scrape, compare=compare)
-
-    if args.platform in ["aqua", "all"]:
-        run_aqua_pipeline(scrape=scrape, compare=compare)
-
-    if args.platform in ["furaipan", "all"]:
-        run_furaipan_pipeline(scrape=scrape, compare=compare)
-
-    total_elapsed = time.time() - total_start
-    print("\n" + "=" * 60)
-    print(f"🎉 All requested pipelines finished in {total_elapsed:.2f}s.")
-    print("=" * 60)
+    dispatch_pipeline(platform=args.platform, scrape=scrape, compare=compare)
     return 0
 
 

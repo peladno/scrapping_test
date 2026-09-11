@@ -190,3 +190,11 @@ def test_main_runs_furaipan_only(
     assert not mock_amazon.called
     assert not mock_yodobashi.called
     assert not mock_aqua.called
+
+
+@patch("core.menu.launch_interactive_menu")
+def test_main_runs_interactive_menu(mock_launch_menu: MagicMock) -> None:
+    """Test main launches interactive menu when -i or --menu is passed."""
+    exit_code = main(["--interactive"])
+    assert exit_code == 0
+    assert mock_launch_menu.called

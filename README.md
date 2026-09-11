@@ -92,11 +92,49 @@ OUTPUT_FURAIPAN_COMPARISON_EXCEL="data/outputs/furaipan_price_comparison.xlsx"
 
 ---
 
-## 📖 Usage Guide
+## 🖥️ Interactive Terminal Menu (Control Panel)
 
-### 1. Unified CLI Orchestrator (`main.py`)
+You can launch an interactive terminal menu in English without needing to type CLI flags:
 
-Run the entire pipeline (scraping + comparison) or target specific platforms with a single command:
+```bash
+# Launch interactive menu with Poetry
+poetry run python main.py -i
+
+# Or simply run main.exe (or double-click main.exe in Windows)
+.\main.exe
+```
+
+```text
+==================================================================
+  🛒 E-COMMERCE SCRAPER & COMPARATOR - CONTROL PANEL
+==================================================================
+  [1] 🚀 Run FULL Pipeline (Scrape + Compare) - ALL Platforms
+  [2] 🌐 Run FULL Pipeline for a Single Platform
+  [3] 📥 Scrape Data Only (Skip Comparison)
+  [4] 📊 Compare Prices Only (Existing Excel Files)
+  [5] 🧪 Run Automated Tests (Pytest)
+  [6] 📁 Check System & Excel Files Status
+  [0] ❌ Exit
+==================================================================
+👉 Select an option [0-6]:
+```
+
+---
+
+## 📖 Execution & Usage Methods
+
+The project supports **two execution modes** that work identically:
+
+1. **Direct execution with Python & Poetry** (ideal for development and regular use).
+2. **Standalone Windows Executable (`main.exe`)** (ideal for running on any PC without installing Python or Poetry).
+
+---
+
+### Option A: Running with Python & Poetry (Standard)
+
+Use this method when developing or running on machines with Python and Poetry installed:
+
+#### 1. Unified CLI (`main.py`)
 
 ```bash
 # Run all platforms (Rakuten, Yahoo Shopping, Amazon Japan, Yodobashi Camera, Aqua, Furaipan)
@@ -117,14 +155,10 @@ poetry run python main.py --platform all --scrape-only
 poetry run python main.py --platform all --compare-only
 ```
 
----
-
-### 2. Standalone Scripts
-
-You can also run individual scrapers independently as modules:
+#### 2. Individual Scraper Modules
 
 ```bash
-# Individual Scrapers
+# Run standalone scraper scripts directly
 poetry run python -m scrapers.rakuten_scraper
 poetry run python -m scrapers.yahoo_scraper
 poetry run python -m scrapers.amazon_scraper
@@ -133,7 +167,63 @@ poetry run python -m scrapers.aqua_scraper
 poetry run python -m scrapers.furaipan_scraper
 ```
 
-#### 🎨 Report Color Highlights:
+---
+
+### Option B: Standalone Executable (`main.exe`)
+
+Use this method to distribute and execute the scraper on any Windows machine **without installing Python or dependencies**.
+
+#### 1. Build the Executable
+
+The project includes a pre-configured [`main.spec`] that bundles all C-extensions, browser TLS emulators (`curl_cffi`), Excel engines (`openpyxl`, `pandas`), and scraper modules:
+
+```bash
+# Compile dist/main.exe
+poetry run pyinstaller --clean --noconfirm main.spec
+```
+
+The output binary is placed in `dist/main.exe`.
+
+#### 2. Distributing and Running on Any Windows PC
+
+To run on another machine, copy or zip the following folder layout:
+
+```text
+Scraper_App/
+├── main.exe                   # From dist/main.exe
+├── .env                       # (Optional) Custom URLs & environment variables
+└── data/
+    ├── inputs/                # Master catalog & store Excel input files
+    │   ├── list-products.xlsx
+    │   ├── rakuten_stores.xlsx
+    │   └── yahoo_stores.xlsx
+    └── outputs/               # Folder where output Excel files are written
+```
+
+Run directly from PowerShell or Command Prompt (CMD):
+
+```powershell
+# Run all platforms
+.\main.exe
+
+# Run specific platform
+.\main.exe --platform rakuten
+.\main.exe --platform yahoo
+.\main.exe --platform amazon
+.\main.exe --platform yodobashi
+.\main.exe --platform aqua
+.\main.exe --platform furaipan
+
+# Compare existing Excel files only
+.\main.exe --platform all --compare-only
+
+# Scrape only
+.\main.exe --platform all --scrape-only
+```
+
+---
+
+### 🎨 Report Color Highlights:
 
 - 🟢 **Green (`#C6EFCE`)**: Scraped price matches the official catalog price exactly.
 - 🔴 **Red (`#FFC7CE`)**: Product code is in the catalog, but the store's published price differs.
