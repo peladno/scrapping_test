@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 
-from config import (
+from core.config import (
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
     HTTP_RETRIES,
@@ -33,7 +33,7 @@ from config import (
     YAHOO_SHEET_NAME,
     YAHOO_TITLE_CLASS,
 )
-from utils import (
+from core.utils import (
     clean_points_text,
     clean_price_text,
     clean_product_url,

@@ -1,7 +1,7 @@
 """Unit tests for utils.py module."""
 
 from typing import List
-from utils import (
+from core.utils import (
     clean_points_text,
     clean_price_text,
     clean_product_url,

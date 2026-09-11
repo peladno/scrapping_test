@@ -16,13 +16,13 @@ from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 import pandas as pd
 
-from config import (
+from core.config import (
     CATALOG_LIST_EXCEL,
     OUTPUT_COMPARISON_EXCEL,
     OUTPUT_SCRAPED_EXCEL,
     TARGET_KEYWORD,
 )
-from utils import (
+from core.utils import (
     evaluate_amazon_point_status,
     evaluate_point_status,
     format_currency_yen,

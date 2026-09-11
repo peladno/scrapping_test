@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
 import pandas as pd
 
-from config import (
+from core.config import (
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
     HTTP_RETRIES,
@@ -27,7 +27,7 @@ from config import (
     YODOBASHI_SEARCH_KEYWORD,
     YODOBASHI_SEARCH_URL,
 )
-from utils import (
+from core.utils import (
     clean_points_text,
     clean_price_text,
     evaluate_point_status,

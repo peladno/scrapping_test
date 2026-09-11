@@ -15,7 +15,7 @@ import urllib.parse
 import pandas as pd
 import requests
 
-from config import CATALOG_LIST_EXCEL, HTTP_RETRIES, HTTP_TIMEOUT
+from core.config import CATALOG_LIST_EXCEL, HTTP_RETRIES, HTTP_TIMEOUT
 
 # Configure UTF-8 encoding for Windows console output
 if hasattr(sys.stdout, "reconfigure"):

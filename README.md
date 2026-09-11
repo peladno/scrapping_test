@@ -10,16 +10,19 @@ The system extracts product catalogs, filters items by brand/keywords (e.g., `GL
 
 ```text
 scrapping/
-├── config.py                 # Central configuration, .env loader, and CSS selectors
-├── utils.py                  # Shared utilities (parsing, cleaning, regex, Excel export)
-├── rakuten_scraper.py        # Rakuten store scraper with dynamic pagination handling
-├── yahoo_scraper.py          # Yahoo Shopping store scraper with card-level parsing
-├── amazon_scraper.py         # Amazon Japan scraper
-├── yodobashi_scraper.py      # Yodobashi Camera scraper
-├── aqua_scraper.py           # Import Shop Aqua scraper
-├── furaipan_scraper.py       # Furaipan Club catalog scraper
-├── compare_prices.py         # Universal / Rakuten price comparator vs catalog
-├── yahoo_compare_prices.py   # Yahoo Shopping price comparator vs catalog
+├── core/                     # Central domain logic, utils & configuration
+│   ├── __init__.py
+│   ├── config.py             # Configuration, URLs, and CSS selectors
+│   ├── utils.py              # Parsers, regex, Japanese knife ontology, Excel export
+│   └── comparator.py         # Price comparison engine & color highlighter
+├── scrapers/                 # Dedicated web scrapers by e-commerce platform
+│   ├── __init__.py
+│   ├── rakuten_scraper.py    # Rakuten Ichiba store scraper
+│   ├── yahoo_scraper.py      # Yahoo Shopping store scraper
+│   ├── amazon_scraper.py     # Amazon Japan product scraper
+│   ├── yodobashi_scraper.py  # Yodobashi Camera product scraper
+│   ├── aqua_scraper.py       # Import Shop Aqua catalog scraper
+│   └── furaipan_scraper.py   # Furaipan Club catalog scraper
 ├── data/
 │   ├── inputs/               # Master input Excel workbooks (ignored by Git)
 │   └── outputs/              # Generated scraped & comparison Excel reports (ignored by Git)
@@ -29,6 +32,7 @@ scrapping/
 │   ├── test_compare_prices.py
 │   ├── test_scrapers.py
 │   └── test_main.py
+├── main.py                   # Unified CLI entrypoint
 ├── .env.example              # Environment variables template
 ├── .gitignore                # Git exclusion rules (Excel files, .env, pycache, venv)
 ├── pyproject.toml            # Poetry configuration, dependencies, and tool settings
@@ -117,20 +121,16 @@ poetry run python main.py --platform all --compare-only
 
 ### 2. Standalone Scripts
 
-You can also run individual scrapers and comparators independently:
+You can also run individual scrapers independently as modules:
 
 ```bash
 # Individual Scrapers
-poetry run python rakuten_scraper.py
-poetry run python yahoo_scraper.py
-poetry run python amazon_scraper.py
-poetry run python yodobashi_scraper.py
-poetry run python aqua_scraper.py
-poetry run python furaipan_scraper.py
-
-# Individual Comparators
-poetry run python compare_prices.py
-poetry run python yahoo_compare_prices.py
+poetry run python -m scrapers.rakuten_scraper
+poetry run python -m scrapers.yahoo_scraper
+poetry run python -m scrapers.amazon_scraper
+poetry run python -m scrapers.yodobashi_scraper
+poetry run python -m scrapers.aqua_scraper
+poetry run python -m scrapers.furaipan_scraper
 ```
 
 #### 🎨 Report Color Highlights:
@@ -151,10 +151,10 @@ The codebase includes automated unit tests and strict static type checks:
 poetry run pytest -v
 
 # Code style and linting (Flake8)
-poetry run flake8 config.py utils.py compare_prices.py yahoo_compare_prices.py rakuten_scraper.py yahoo_scraper.py tests/
+poetry run flake8 core/ scrapers/ tests/ main.py
 
 # Static type checking (Mypy)
-poetry run mypy config.py utils.py compare_prices.py yahoo_compare_prices.py rakuten_scraper.py yahoo_scraper.py tests/
+poetry run mypy core/ scrapers/ tests/ main.py
 ```
 
 ---

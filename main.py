@@ -9,9 +9,8 @@ import sys
 import time
 from typing import List, Optional
 
-from amazon_scraper import scrape_all_amazon_products
-from compare_prices import compare_and_highlight_excel
-from config import (
+from core.comparator import compare_and_highlight_excel
+from core.config import (
     CATALOG_LIST_EXCEL,
     OUTPUT_AMAZON_COMPARISON_EXCEL,
     OUTPUT_AMAZON_SCRAPED_EXCEL,
@@ -28,11 +27,12 @@ from config import (
     RAKUTEN_MASTER_EXCEL,
     YAHOO_MASTER_EXCEL,
 )
-from aqua_scraper import scrape_all_aqua_products
-from furaipan_scraper import scrape_all_furaipan_products
-from rakuten_scraper import scrape_all_rakuten_stores
-from yahoo_scraper import scrape_all_yahoo_stores
-from yodobashi_scraper import scrape_all_yodobashi_products
+from scrapers.amazon_scraper import scrape_all_amazon_products
+from scrapers.aqua_scraper import scrape_all_aqua_products
+from scrapers.furaipan_scraper import scrape_all_furaipan_products
+from scrapers.rakuten_scraper import scrape_all_rakuten_stores
+from scrapers.yahoo_scraper import scrape_all_yahoo_stores
+from scrapers.yodobashi_scraper import scrape_all_yodobashi_products
 
 # Configure UTF-8 encoding for Windows console output
 if hasattr(sys.stdout, "reconfigure"):

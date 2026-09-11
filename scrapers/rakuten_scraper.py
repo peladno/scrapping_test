@@ -16,7 +16,7 @@ from bs4 import BeautifulSoup, Tag
 import pandas as pd
 import requests
 
-from config import (
+from core.config import (
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
     HTTP_RETRIES,
@@ -34,7 +34,7 @@ from config import (
     RAKUTEN_TITLE_CLASS,
     TARGET_KEYWORD,
 )
-from utils import (
+from core.utils import (
     clean_points_text,
     clean_price_text,
     extract_product_code,

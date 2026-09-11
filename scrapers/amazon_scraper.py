@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import requests
 
-from config import (
+from core.config import (
     AMAZON_BASE_URL,
     AMAZON_SEARCH_KEYWORD,
     AMAZON_SEARCH_URL,
@@ -27,7 +27,7 @@ from config import (
     OUTPUT_AMAZON_SCRAPED_EXCEL,
     TARGET_KEYWORD,
 )
-from utils import (
+from core.utils import (
     clean_points_text,
     clean_price_text,
     evaluate_amazon_point_status,

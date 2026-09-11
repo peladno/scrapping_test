@@ -1,8 +1,8 @@
 """Unit tests for compare_prices.py module."""
 
 from typing import Dict, Optional
-from compare_prices import compare_single_item
-from config import TARGET_KEYWORD
+from core.comparator import compare_single_item
+from core.config import TARGET_KEYWORD
 
 
 def test_compare_single_item_match(

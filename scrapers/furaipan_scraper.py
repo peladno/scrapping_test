@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
 import pandas as pd
 
-from config import (
+from core.config import (
     CATALOG_LIST_EXCEL,
     COURTESY_PAUSE_SECONDS,
     FURAIPAN_BASE_URL,
@@ -29,7 +29,7 @@ from config import (
     OUTPUT_FURAIPAN_SCRAPED_EXCEL,
     TARGET_KEYWORD,
 )
-from utils import (
+from core.utils import (
     clean_price_text,
     extract_product_code,
     load_official_product_codes,

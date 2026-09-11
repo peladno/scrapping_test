@@ -15,7 +15,7 @@ from bs4 import BeautifulSoup
 from curl_cffi import requests as cffi_requests
 import pandas as pd
 
-from config import (
+from core.config import (
     AQUA_BASE_URL,
     AQUA_CARD_CLASS,
     AQUA_PRICE_CLASS,
@@ -30,7 +30,7 @@ from config import (
     OUTPUT_AQUA_SCRAPED_EXCEL,
     TARGET_KEYWORD,
 )
-from utils import (
+from core.utils import (
     clean_price_text,
     extract_product_code,
     load_official_product_codes,

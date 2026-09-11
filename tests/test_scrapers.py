@@ -3,30 +3,30 @@
 import re
 from bs4 import BeautifulSoup
 
-from config import (
+from core.config import (
     YAHOO_DETAIL_LINK_CLASS,
     YAHOO_POINTS_CLASS,
     YAHOO_PRICE_CLASS,
     YAHOO_TITLE_CLASS,
 )
-from amazon_scraper import (
+from scrapers.amazon_scraper import (
     build_amazon_search_url,
     parse_amazon_search_page,
 )
-from aqua_scraper import (
+from scrapers.aqua_scraper import (
     build_aqua_search_url,
     parse_aqua_search_page,
 )
-from furaipan_scraper import (
+from scrapers.furaipan_scraper import (
     extract_furaipan_item_links,
     parse_furaipan_detail_page,
 )
-from rakuten_scraper import (
+from scrapers.rakuten_scraper import (
     build_rakuten_page_url,
     parse_rakuten_spec_table,
 )
-from yahoo_scraper import build_yahoo_page_url
-from yodobashi_scraper import (
+from scrapers.yahoo_scraper import build_yahoo_page_url
+from scrapers.yodobashi_scraper import (
     build_yodobashi_search_url,
     parse_yodobashi_search_page,
 )
