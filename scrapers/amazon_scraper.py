@@ -12,8 +12,8 @@ import urllib.parse
 from typing import Dict, List, Optional, Set
 
 from bs4 import BeautifulSoup
+from curl_cffi import requests as cffi_requests
 import pandas as pd
-import requests
 
 from core.config import (
     AMAZON_BASE_URL,
@@ -40,24 +40,13 @@ from core.utils import (
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
 
-# Realistic browser request headers for Amazon Japan anti-bot resilience
+# Clean browser request headers aligned with curl_cffi impersonation
 DEFAULT_AMAZON_HEADERS: Dict[str, str] = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/128.0.0.0 Safari/537.36"
-    ),
     "Accept": (
         "text/html,application/xhtml+xml,application/xml;q=0.9,"
         "image/avif,image/webp,image/apng,*/*;q=0.8"
     ),
-    "Accept-Language": "ja,en-US;q=0.9,en;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Sec-Ch-Ua": (
-        '"Chromium";v="128", "Not;A=Brand";v="24", "Google Chrome";v="128"'
-    ),
-    "Sec-Ch-Ua-Mobile": "?0",
-    "Sec-Ch-Ua-Platform": '"Windows"',
+    "Accept-Language": "ja-JP,ja;q=0.9,en-US;q=0.8,en;q=0.7",
     "Sec-Fetch-Dest": "document",
     "Sec-Fetch-Mode": "navigate",
     "Sec-Fetch-Site": "same-origin",
@@ -221,8 +210,6 @@ def scrape_amazon_products(
     all_results: List[Dict[str, str]] = []
     seen_asins: Set[str] = set()
 
-    session = requests.Session()
-
     for page in range(1, max_pages + 1):
         target_url = build_amazon_search_url(search_keyword, page)
         print(f"  [Amazon Page {page}] Requesting: {target_url}", flush=True)
@@ -230,8 +217,11 @@ def scrape_amazon_products(
         html_text = ""
         for attempt in range(HTTP_RETRIES):
             try:
-                response = session.get(
-                    target_url, headers=req_headers, timeout=HTTP_TIMEOUT
+                response = cffi_requests.get(
+                    target_url,
+                    headers=req_headers,
+                    impersonate="chrome120",
+                    timeout=HTTP_TIMEOUT,
                 )
                 if response.status_code == 200:
                     html_text = response.text
@@ -243,7 +233,7 @@ def scrape_amazon_products(
                         flush=True,
                     )
                     time.sleep(COURTESY_PAUSE_SECONDS * (attempt + 2))
-            except requests.RequestException as err:
+            except Exception as err:
                 print(f"  [Attempt {attempt + 1}] Error: {err}", flush=True)
                 time.sleep(COURTESY_PAUSE_SECONDS)
 
